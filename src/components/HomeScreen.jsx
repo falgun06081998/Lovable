@@ -2,7 +2,8 @@ import { Search, MessageCircle, Bell, ChevronDown, ChevronRight, ArrowUpRight, P
 
 export default function HomeScreen() {
   return (
-    <div style={{ background: 'white', minHeight: 812, overflowY: 'auto', paddingBottom: 60 }}>
+    <div style={{ background: 'white', height: 812, overflowY: 'auto', paddingBottom: 60 }}>
+
       {/* STATUS BAR */}
       <div style={{ background: 'white', padding: '10px 16px 4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontWeight: 700, fontSize: 15 }}>9:41</span>
@@ -105,7 +106,7 @@ export default function HomeScreen() {
             <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
               {card
                 ? <div style={{ width: 72, height: 60, borderRadius: 12, background: 'linear-gradient(135deg,#e0f2fe,#bae6fd)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#0369a1', fontWeight: 600, textAlign: 'center', padding: 6 }}>Book Professional Clean ✨</div>
-                : <div style={{ width: 52, height: 52, borderRadius: '50%', background: red ? '#C8102E' : '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, border: red ? 'none' : '1px solid #e8e8e8' }}>{emoji}</div>
+                : <div style={{ width: 52, height: 52, borderRadius: '50%', background: red ? '#C8102E' : '#f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{emoji}</div>
               }
               <span style={{ fontSize: 10.5, color: '#555', textAlign: 'center', maxWidth: 70 }}>{label}</span>
             </div>
@@ -137,7 +138,7 @@ export default function HomeScreen() {
       </div>
 
       {/* SOCIETY NOTICES */}
-      <div style={{ padding: '4px 16px 12px', background: 'white', marginTop: 4 }}>
+      <div style={{ padding: '4px 16px 80px', background: 'white', marginTop: 4 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 10, paddingTop: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e' }}>Society Notices</span>
@@ -146,7 +147,7 @@ export default function HomeScreen() {
           <span style={{ fontSize: 12, color: '#C8102E', fontWeight: 600, cursor: 'pointer' }}>See all</span>
         </div>
         <div style={{ display: 'flex', gap: 12, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {[{title:'Experience the GIIS di...',desc:'Comprehensive 9G Teaching Framework, Skill Comprehensive 9GEMS Teaching Framework...',time:'2d ago',color:'#7c3aed'},{title:'Emergency maintenance...',desc:'Urgent notice regarding scheduled maintenance work in the society premises...',time:'3d ago',color:'#2563eb'}].map((n,i)=>(
+          {[{title:'Experience the GIIS di...',desc:'Comprehensive 9G Teaching Framework, Skill Comprehensive 9GEMS Teaching Framework...',time:'2d ago',color:'#7c3aed'},{title:'Emergency maintenance...',desc:'Urgent notice regarding scheduled maintenance work...',time:'3d ago',color:'#2563eb'}].map((n,i)=>(
             <div key={i} style={{ flexShrink: 0, width: 155, border: '1px solid #e8e8e8', borderRadius: 10, overflow: 'hidden', cursor: 'pointer' }}>
               <div style={{ height: 60, background: `linear-gradient(135deg,${n.color}22,${n.color}44)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>📋</div>
               <div style={{ padding: '8px 10px' }}>
@@ -162,11 +163,8 @@ export default function HomeScreen() {
         </div>
       </div>
 
-      {/* SALE TAB */}
-      <div style={{ position: 'fixed', right: 0, top: '45%', background: '#e91e8c', color: 'white', writingMode: 'vertical-rl', padding: '10px 6px', fontSize: 11, fontWeight: 700, borderRadius: '8px 0 0 8px', zIndex: 30, cursor: 'pointer', letterSpacing: 1 }}>SALE M</div>
-
-      {/* BOTTOM NAV */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, maxWidth: 375, margin: '0 auto', background: 'white', borderTop: '1px solid #e8e8e8', display: 'flex', zIndex: 20 }}>
+      {/* BOTTOM NAV — sticky so it stays at bottom of scroll */}
+      <div style={{ position: 'sticky', bottom: 0, background: 'white', borderTop: '1px solid #e8e8e8', display: 'flex', zIndex: 20 }}>
         {[{label:'Home',emoji:'🏠',active:true},{label:'Visitors',emoji:'👥'},{label:'Society',emoji:'🏢'},{label:'Profile',emoji:'👤'}].map(({label,emoji,active})=>(
           <div key={label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 0 4px', cursor: 'pointer' }}>
             <span style={{ fontSize: 22 }}>{emoji}</span>

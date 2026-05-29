@@ -1,9 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Send, Copy } from 'lucide-react';
 
-const TRIGGER_PREAPPROVAL = ['pre-approve','pre approval','gate pass','delivery','blinkit','swiggy','zomato','amazon','flipkart','zepto','dunzo','uber','ola','rapido','cab','guest','visitor'];
-const TRIGGER_HELPDESK = ['complaint','ticket','raise','issue','problem','kaam nahi','kaam nhi','band hai','nahi chal','lift','elevator','paani','water','bijli','electricity','light','parking','leak','broken','noise','smell','pest','sewage'];
-const HIGH_PRIORITY = ['lift stuck','koi andar band','fire','aag','flood','paani bhar','leak','gas'];
+// Transliterated + Devanagari triggers
+const TRIGGER_PREAPPROVAL = [
+  'pre-approve','pre approval','pre-approval','gate pass','delivery','blinkit','swiggy','zomato',
+  'amazon','flipkart','zepto','dunzo','uber','ola','rapido','cab','guest','visitor',
+  'प्री-अप्रूवल','प्री अप्रूवल','गेट पास','डिलीवरी','ब्लिंकिट','स्विगी','ज़ोमाटो','जोमाटो',
+  'अमेज़न','फ्लिपकार्ट','ज़ेप्टो','उबर','ओला','रैपिडो','कैब','गेस्ट','विजिटर','मेहमान',
+  'आने वाला','परवल','अप्रूवल','अनुमति','इजाज़त',
+];
+const TRIGGER_HELPDESK = [
+  'complaint','ticket','raise','issue','problem','kaam nahi','kaam nhi','band hai','nahi chal',
+  'lift','elevator','paani','water','bijli','electricity','light','parking','leak','broken',
+  'noise','smell','pest','sewage',
+  'शिकायत','समस्या','खराब','बंद है','काम नहीं','नहीं चल','लिफ्ट','पानी','बिजली','लाइट',
+  'पार्किंग','लीक','शोर','कीड़े','सीवेज','गंदगी','टिकट','दर्ज',
+];
+const HIGH_PRIORITY = [
+  'lift stuck','koi andar band','fire','aag','flood','paani bhar','leak','gas',
+  'लिफ्ट फंसी','आग','बाढ़','गैस लीक','कोई फंसा',
+];
 
 function classify(text) {
   const t = text.toLowerCase();
@@ -13,45 +29,50 @@ function classify(text) {
 }
 function extractDate(text) {
   const t = text.toLowerCase();
-  if (t.includes('kal') || t.includes('tomorrow')) return 'Tomorrow';
-  if (t.includes('parso')) return 'Day after tomorrow';
-  if (t.includes('aaj') || t.includes('today')) return 'Today';
-  if (t.includes('friday')) return 'Friday';
-  if (t.includes('saturday')) return 'Saturday';
-  if (t.includes('sunday')) return 'Sunday';
+  if (t.includes('kal') || t.includes('tomorrow') || t.includes('कल')) return 'Tomorrow';
+  if (t.includes('parso') || t.includes('day after') || t.includes('परसों')) return 'Day after tomorrow';
+  if (t.includes('aaj') || t.includes('today') || t.includes('आज')) return 'Today';
+  if (t.includes('friday') || t.includes('शुक्रवार')) return 'Friday';
+  if (t.includes('saturday') || t.includes('शनिवार')) return 'Saturday';
+  if (t.includes('sunday') || t.includes('रविवार')) return 'Sunday';
+  if (t.includes('monday') || t.includes('सोमवार')) return 'Monday';
   return null;
 }
 function extractTime(text) {
   const t = text.toLowerCase();
-  const m = t.match(/(\d{1,2})\s*(am|pm|baje)/i);
-  if (m) return `${m[1]} ${m[2].toUpperCase()}`;
-  if (t.includes('subah') || t.includes('morning')) return 'Morning';
-  if (t.includes('shaam') || t.includes('evening')) return 'Evening';
-  if (t.includes('raat') || t.includes('night')) return 'Night';
+  const m = t.match(/(\d{1,2})\s*(am|pm|baje|बजे)/i);
+  if (m) return `${m[1]} ${m[2].replace('बजे','').toUpperCase() || 'AM'}`;
+  if (t.includes('subah') || t.includes('morning') || t.includes('सुबह')) return 'Morning';
+  if (t.includes('shaam') || t.includes('evening') || t.includes('शाम')) return 'Evening';
+  if (t.includes('raat') || t.includes('night') || t.includes('रात')) return 'Night';
   return null;
 }
 function extractVisitorType(text) {
   const t = text.toLowerCase();
-  if (t.includes('blinkit')) return 'Blinkit delivery';
-  if (t.includes('swiggy')) return 'Swiggy delivery';
-  if (t.includes('zomato')) return 'Zomato delivery';
-  if (t.includes('amazon')) return 'Amazon delivery';
-  if (t.includes('flipkart')) return 'Flipkart delivery';
-  if (t.includes('zepto')) return 'Zepto delivery';
-  if (t.includes('uber') || t.includes('ola') || t.includes('rapido') || t.includes('cab')) return 'Cab';
-  if (t.includes('guest') || t.includes('visitor')) return 'Guest';
-  return 'Delivery';
+  if (t.includes('blinkit') || t.includes('ब्लिंकिट')) return 'Blinkit delivery';
+  if (t.includes('swiggy') || t.includes('स्विगी')) return 'Swiggy delivery';
+  if (t.includes('zomato') || t.includes('ज़ोमाटो') || t.includes('जोमाटो')) return 'Zomato delivery';
+  if (t.includes('amazon') || t.includes('अमेज़न')) return 'Amazon delivery';
+  if (t.includes('flipkart') || t.includes('फ्लिपकार्ट')) return 'Flipkart delivery';
+  if (t.includes('zepto') || t.includes('ज़ेप्टो')) return 'Zepto delivery';
+  if (t.includes('uber')||t.includes('ola')||t.includes('rapido')||t.includes('cab')||
+      t.includes('उबर')||t.includes('ओला')||t.includes('रैपिडो')||t.includes('कैब')) return 'Cab';
+  if (t.includes('guest')||t.includes('visitor')||t.includes('मेहमान')||
+      t.includes('गेस्ट')||t.includes('विजिटर')) return 'Guest';
+  if (t.includes('delivery') || t.includes('डिलीवरी')) return 'Delivery';
+  return 'Visitor';
 }
 function extractIssueType(text) {
   const t = text.toLowerCase();
-  if (t.includes('lift') || t.includes('elevator')) return 'Lift / Elevator';
-  if (t.includes('paani') || t.includes('water')) return 'Water Supply';
-  if (t.includes('bijli') || t.includes('electricity') || t.includes('light')) return 'Electricity';
-  if (t.includes('parking')) return 'Parking';
-  if (t.includes('leak')) return 'Leakage';
-  if (t.includes('noise')) return 'Noise Complaint';
-  if (t.includes('pest')) return 'Pest Control';
-  if (t.includes('sewage')) return 'Sewage';
+  if (t.includes('lift')||t.includes('elevator')||t.includes('लिफ्ट')) return 'Lift / Elevator';
+  if (t.includes('paani')||t.includes('water')||t.includes('पानी')) return 'Water Supply';
+  if (t.includes('bijli')||t.includes('electricity')||t.includes('light')||
+      t.includes('बिजली')||t.includes('लाइट')) return 'Electricity';
+  if (t.includes('parking')||t.includes('पार्किंग')) return 'Parking';
+  if (t.includes('leak')||t.includes('लीक')) return 'Leakage';
+  if (t.includes('noise')||t.includes('शोर')) return 'Noise Complaint';
+  if (t.includes('pest')||t.includes('कीड़े')) return 'Pest Control';
+  if (t.includes('sewage')||t.includes('सीवेज')) return 'Sewage';
   return null;
 }
 function isHighPriority(text) {
@@ -105,11 +126,9 @@ export default function MyraSheet({ isClosing, onClose }) {
     rec.start();
     speechRef.current = rec;
   }
-
   function stopListening() {
     if (speechRef.current) { try { speechRef.current.stop(); } catch (_e) {} }
   }
-
   function processUtterance(text) {
     stopListening();
     setVoiceState('thinking');
@@ -117,24 +136,21 @@ export default function MyraSheet({ isClosing, onClose }) {
     setTranscript('');
     setTimeout(() => runFlow(text), 1200);
   }
-
   function addMyra(text) {
     setMessages(prev => [...prev, { role: 'myra', text }]);
   }
-
   function runFlow(text) {
     if (flow) { continueFlow(text); return; }
     const type = classify(text);
     if (!type) {
       setVoiceState('responding');
-      addMyra("Mujhe samajh nahi aaya. Kya aap dobara bol sakte hain?");
-      setTimeout(() => startListening(), 1500);
+      addMyra('Mujhe samajh nahi aaya. Kya aap dobara bol sakte hain?\n(I didn\'t understand, please try again.)');
+      setTimeout(() => startListening(), 1800);
       return;
     }
     if (type === 'preapproval') startPreapprovalFlow(text);
     else startHelpdeskFlow(text);
   }
-
   function startPreapprovalFlow(text) {
     const visitor = extractVisitorType(text);
     const date = extractDate(text);
@@ -145,7 +161,6 @@ export default function MyraSheet({ isClosing, onClose }) {
     setFlow(f);
     askNextPreapproval(f);
   }
-
   function askNextPreapproval(f) {
     setVoiceState('responding');
     if (!f.data.date) {
@@ -166,7 +181,6 @@ export default function MyraSheet({ isClosing, onClose }) {
       setShowCard(true);
     }
   }
-
   function startHelpdeskFlow(text) {
     const issueType = extractIssueType(text);
     const locMatch = text.match(/(\d+\w*)\s*floor/i);
@@ -177,7 +191,6 @@ export default function MyraSheet({ isClosing, onClose }) {
     setFlow(f);
     askNextHelpdesk(f);
   }
-
   function askNextHelpdesk(f) {
     setVoiceState('responding');
     if (!f.data.issueType) {
@@ -194,49 +207,37 @@ export default function MyraSheet({ isClosing, onClose }) {
       setShowCard(true);
     }
   }
-
   function continueFlow(text) {
     const f = flow;
     if (f.type === 'preapproval') {
       const updated = { ...f, data: { ...f.data } };
       if (f.step === 'date') updated.data.date = extractDate(text) || text.trim();
       else if (f.step === 'time') updated.data.time = extractTime(text) || text.trim();
-      else if (f.step === 'handoff') updated.data.handoff = (text.toLowerCase().includes('security') || text.toLowerCase().includes('gate')) ? 'Leave with security' : 'Direct to flat';
-      setFlow(updated);
-      askNextPreapproval(updated);
+      else if (f.step === 'handoff') updated.data.handoff = (text.toLowerCase().includes('security')||text.includes('सिक्यूरिटी')||text.toLowerCase().includes('gate')) ? 'Leave with security' : 'Direct to flat';
+      setFlow(updated); askNextPreapproval(updated);
     } else {
       const updated = { ...f, data: { ...f.data } };
       if (f.step === 'issue') updated.data.issueType = extractIssueType(text) || text.trim();
       else if (f.step === 'location') updated.data.location = text.trim();
-      setFlow(updated);
-      askNextHelpdesk(updated);
+      setFlow(updated); askNextHelpdesk(updated);
     }
   }
-
   function handleChip(chip) {
-    setTranscript(chip.text);
-    setVoiceState('thinking');
     setMessages(prev => [...prev, { role: 'user', text: chip.text }]);
+    setVoiceState('thinking');
     setTimeout(() => {
-      setTranscript('');
       if (chip.type === 'preapproval') startPreapprovalFlow(chip.text);
       else startHelpdeskFlow(chip.text);
     }, 1200);
   }
-
   function handleConfirm() { setShowCard(false); setShowSuccess(true); }
-
   function handleEdit() {
     setShowCard(false);
     addMyra('Theek hai, dobara batao. Kab ke liye chahiye?');
     setFlow(f => ({ ...f, step: 'date', data: { ...f.data, date: null, time: null } }));
     setTimeout(() => startListening(), 800);
   }
-
-  function handleDone() {
-    setShowSuccess(false); setFlow(null); setMessages([]); setVoiceState('idle'); onClose();
-  }
-
+  function handleDone() { setShowSuccess(false); setFlow(null); setMessages([]); setVoiceState('idle'); onClose(); }
   function handleTextSubmit() {
     if (!textInput.trim()) return;
     processUtterance(textInput.trim());
@@ -246,12 +247,11 @@ export default function MyraSheet({ isClosing, onClose }) {
   return (
     <div
       className={isClosing ? 'animate-sheet-down' : 'animate-sheet-up'}
-      style={{ position: 'fixed', left: 0, right: 0, bottom: 96, zIndex: 50, background: 'white', borderRadius: '20px 20px 0 0', maxHeight: 'calc(85vh - 96px)', display: 'flex', flexDirection: 'column', boxShadow: '0 -8px 40px rgba(0,0,0,0.2)' }}
+      style={{ position: 'absolute', left: 0, right: 0, bottom: 96, zIndex: 50, background: 'white', borderRadius: '20px 20px 0 0', maxHeight: 'calc(85% - 96px)', display: 'flex', flexDirection: 'column', boxShadow: '0 -8px 40px rgba(0,0,0,0.2)' }}
     >
       <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 10, paddingBottom: 6 }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, background: '#e0e0e0' }} />
       </div>
-
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 16px 10px', borderBottom: '1px solid #f0f0f0' }}>
         <div style={{ position: 'relative' }}>
           <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#C8102E', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -281,7 +281,6 @@ export default function MyraSheet({ isClosing, onClose }) {
             </div>
           </div>
         )}
-
         {messages.map((m, i) => (
           <div key={i} className="animate-fade-in" style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start', gap: 8, alignItems: 'flex-end' }}>
             {m.role === 'myra' && (
@@ -292,31 +291,22 @@ export default function MyraSheet({ isClosing, onClose }) {
             <div style={{ maxWidth: '75%', background: m.role === 'user' ? '#0f1f3d' : '#f5f5f5', color: m.role === 'user' ? 'white' : '#1a1a2e', borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px', padding: '9px 13px', fontSize: 13, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{m.text}</div>
           </div>
         ))}
-
         {voiceState === 'listening' && (
           <div className="animate-fade-in" style={{ textAlign: 'center', padding: '10px 0' }}>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginBottom: 8, height: 28, alignItems: 'center' }}>
-              {[0, 0.12, 0.24, 0.12, 0].map((d, i) => (
-                <div key={i} className="animate-wave-bar" style={{ width: 4, borderRadius: 2, background: '#C8102E', animationDelay: `${d}s`, height: 6 }} />
-              ))}
+              {[0,0.12,0.24,0.12,0].map((d,i) => <div key={i} className="animate-wave-bar" style={{ width: 4, borderRadius: 2, background: '#C8102E', animationDelay: `${d}s`, height: 6 }} />)}
             </div>
             {transcript && <p style={{ fontSize: 13, color: '#888', fontStyle: 'italic' }}>&#34;{transcript}&#34;</p>}
           </div>
         )}
-
         {voiceState === 'thinking' && (
           <div className="animate-fade-in" style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
-            <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#C8102E', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: 'white', fontSize: 10, fontWeight: 700 }}>M</span>
-            </div>
+            <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#C8102E', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: 'white', fontSize: 10, fontWeight: 700 }}>M</span></div>
             <div style={{ background: '#f5f5f5', borderRadius: '16px 16px 16px 4px', padding: '12px 16px', display: 'flex', gap: 5 }}>
-              {[0, 0.2, 0.4].map((d, i) => (
-                <div key={i} className="bounce-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: '#0f1f3d', animationDelay: `${d}s` }} />
-              ))}
+              {[0,0.2,0.4].map((d,i) => <div key={i} className="bounce-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: '#0f1f3d', animationDelay: `${d}s` }} />)}
             </div>
           </div>
         )}
-
         {showSuccess && (
           <div className="animate-fade-in" style={{ textAlign: 'center', paddingTop: 10 }}>
             <div className="animate-scale-in" style={{ display: 'inline-block', marginBottom: 12 }}>
@@ -369,7 +359,7 @@ export default function MyraSheet({ isClosing, onClose }) {
             {(flow.type === 'preapproval'
               ? [['Visitor',flow.data.visitor],['Date',flow.data.date],['Time',flow.data.time],['Valid for','2 hours (default)'],['Handoff',flow.data.handoff]]
               : [['Category',flow.data.issueType||'—'],['Issue',(flow.data.description||'').slice(0,55)+'...'],['Location',flow.data.location||'Not specified'],['Priority',flow.data.priority]]
-            ).map(([label, value]) => (
+            ).map(([label,value]) => (
               <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 12, color: '#888' }}>{label}</span>
                 {label === 'Priority'
@@ -380,9 +370,7 @@ export default function MyraSheet({ isClosing, onClose }) {
             ))}
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={handleConfirm} style={{ flex: 1, background: '#C8102E', color: 'white', border: 'none', borderRadius: 10, padding: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-              {flow.type === 'preapproval' ? 'Confirm' : 'Confirm & Submit'}
-            </button>
+            <button onClick={handleConfirm} style={{ flex: 1, background: '#C8102E', color: 'white', border: 'none', borderRadius: 10, padding: 11, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{flow.type === 'preapproval' ? 'Confirm' : 'Confirm & Submit'}</button>
             <button onClick={handleEdit} style={{ flex: 1, background: '#f0f0f0', color: '#555', border: 'none', borderRadius: 10, padding: 11, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Edit</button>
           </div>
         </div>
@@ -391,13 +379,8 @@ export default function MyraSheet({ isClosing, onClose }) {
       {!showSuccess && (
         <div style={{ flexShrink: 0, padding: '8px 16px 12px', borderTop: '1px solid #f0f0f0' }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-            <input
-              value={textInput}
-              onChange={e => setTextInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleTextSubmit()}
-              placeholder="Or type here and press Enter"
-              style={{ flex: 1, background: '#f5f5f5', border: 'none', borderRadius: 20, padding: '10px 16px', fontSize: 13, color: '#1a1a2e', outline: 'none' }}
-            />
+            <input value={textInput} onChange={e => setTextInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleTextSubmit()} placeholder="Or type here and press Enter"
+              style={{ flex: 1, background: '#f5f5f5', border: 'none', borderRadius: 20, padding: '10px 16px', fontSize: 13, color: '#1a1a2e', outline: 'none' }} />
             <button onClick={handleTextSubmit} style={{ width: 36, height: 36, borderRadius: '50%', background: '#C8102E', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Send size={16} color="white" />
             </button>

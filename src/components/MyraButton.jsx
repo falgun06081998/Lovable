@@ -10,7 +10,7 @@ export default function MyraButton({ phase, onTap }) {
     <>
       {isActive && [0, 0.6, 1.2].map((delay, i) => (
         <div key={i} className="animate-pulse-ring" style={{
-          position: 'fixed', zIndex: 59, pointerEvents: 'none',
+          position: 'absolute', zIndex: 59, pointerEvents: 'none',
           width: 64, height: 64, borderRadius: '50%',
           background: `rgba(200,16,46,${0.28 - i * 0.08})`,
           left: '50%', bottom: 28,
@@ -21,7 +21,7 @@ export default function MyraButton({ phase, onTap }) {
 
       {isActive && (
         <div className="animate-fade-in" style={{
-          position: 'fixed', zIndex: 61,
+          position: 'absolute', zIndex: 61,
           left: '50%', bottom: 100,
           transform: 'translateX(-50%)',
           background: 'white', border: '1.5px solid #C8102E',
@@ -35,7 +35,7 @@ export default function MyraButton({ phase, onTap }) {
       <div
         onClick={isIdle ? onTap : undefined}
         style={{
-          position: 'fixed', zIndex: 60,
+          position: 'absolute', zIndex: 60,
           width: size, height: size, borderRadius: '50%',
           background: '#C8102E',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
