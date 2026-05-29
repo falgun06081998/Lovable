@@ -64,11 +64,14 @@ export default function MyraButton({ phase, onTap }) {
             background:'#22c55e', border:'2px solid white',
           }} />
         )}
+        {/* Idle double pulse rings */}
         {isIdle && [0, 1.5].map((delay, i) => (
-          <div key={i} className="animate-pulse-ring-idle" style={{
+          <div key={i} className="animate-pulse-ring" style={{
             position:'absolute', width:'100%', height:'100%',
             borderRadius:'50%', background:'rgba(200,16,46,0.25)',
+            animationDuration:'3s',
             animationDelay:`${delay}s`,
+            transform:'translateX(0)',
           }} />
         ))}
         <span style={{

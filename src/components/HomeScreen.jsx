@@ -1,345 +1,371 @@
 import { Search, MessageCircle, Bell, ChevronDown, ChevronRight, ArrowUpRight, Pencil } from 'lucide-react';
 
-/* ── small reusable pieces ── */
-const Avatar = ({ src, size = 40, online }) => (
-  <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+/* ── Status bar SVGs ── */
+const SignalIcon = () => (
+  <svg width="17" height="12" viewBox="0 0 17 12" fill="white">
+    <rect x="0" y="7" width="3" height="5" rx="0.5"/>
+    <rect x="4.5" y="4.5" width="3" height="7.5" rx="0.5"/>
+    <rect x="9" y="2" width="3" height="10" rx="0.5"/>
+    <rect x="13.5" y="0" width="3" height="12" rx="0.5"/>
+  </svg>
+);
+
+const WifiIcon = () => (
+  <svg width="16" height="12" viewBox="0 0 16 12" fill="white">
+    <path d="M8 10a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/>
+    <path d="M8 6.5c1.6 0 3 .65 4.05 1.7l1.4-1.4A7.9 7.9 0 008 4.5c-2.2 0-4.2.9-5.65 2.3l1.4 1.4A5.9 5.9 0 018 6.5z"/>
+    <path d="M8 2.5c2.8 0 5.3 1.15 7.1 3l1.4-1.4A11.4 11.4 0 008 .5 11.4 11.4 0 00.5 4.1l1.4 1.4A9.4 9.4 0 018 2.5z"/>
+  </svg>
+);
+
+const BatteryIcon = () => (
+  <svg width="25" height="12" viewBox="0 0 25 12" fill="white">
+    <rect x="0" y="1" width="21" height="10" rx="2.5" stroke="white" strokeWidth="1.2" fill="none"/>
+    <rect x="1.5" y="2.5" width="16" height="7" rx="1.5" fill="white"/>
+    <rect x="22" y="3.5" width="2.5" height="5" rx="1.2" fill="white"/>
+  </svg>
+);
+
+/* ── Quick Tile ── */
+const QuickTile = ({ icon, label, bg }) => (
+  <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, flex:1 }}>
     <div style={{
-      width: size, height: size, borderRadius: '50%',
-      background: src ? 'transparent' : '#ddd',
-      overflow: 'hidden', border: '2px solid white',
-    }}>
-      {src
-        ? <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#a78bfa,#7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: size * 0.36, fontWeight: 700 }} />
-      }
-    </div>
-    {online && (
+      width:56, height:56, borderRadius:16,
+      background:bg, display:'flex', alignItems:'center', justifyContent:'center',
+      fontSize:26, boxShadow:'0 2px 8px rgba(0,0,0,0.1)',
+    }}>{icon}</div>
+    <span style={{ fontSize:11, fontWeight:500, color:'#444', textAlign:'center' }}>{label}</span>
+  </div>
+);
+
+/* ── People Avatar ── */
+const PersonAvatar = ({ initial, bg, name, online }) => (
+  <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, flexShrink:0 }}>
+    <div style={{ position:'relative' }}>
       <div style={{
-        position: 'absolute', bottom: 1, right: 1,
-        width: 9, height: 9, borderRadius: '50%',
-        background: '#22c55e', border: '1.5px solid white',
-      }} />
-    )}
+        width:46, height:46, borderRadius:'50%',
+        background:bg, display:'flex', alignItems:'center', justifyContent:'center',
+        color:'white', fontWeight:700, fontSize:17,
+      }}>{initial}</div>
+      {online && (
+        <div style={{
+          position:'absolute', bottom:1, right:1,
+          width:11, height:11, borderRadius:'50%',
+          background:'#22c55e', border:'2px solid white',
+        }} />
+      )}
+    </div>
+    <span style={{ fontSize:10, color:'#555', maxWidth:46, textAlign:'center', lineHeight:1.2 }}>{name}</span>
+  </div>
+);
+
+/* ── Dashed Help Circle ── */
+const DailyHelpCircle = () => (
+  <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, flexShrink:0 }}>
+    <div style={{
+      width:46, height:46, borderRadius:'50%',
+      border:'1.5px dashed #aaa', display:'flex', alignItems:'center', justifyContent:'center',
+      fontSize:22,
+    }}>🧹</div>
+    <span style={{ fontSize:10, color:'#888', maxWidth:48, textAlign:'center', lineHeight:1.2 }}>Daily Help</span>
+  </div>
+);
+
+/* ── Service Card ── */
+const ServiceCard = ({ icon, label, bg, small }) => (
+  <div style={{
+    flexShrink:0, borderRadius:14, background:bg||'#f5f5f5',
+    padding: small ? '10px 12px' : '12px 14px',
+    display:'flex', flexDirection:'column', gap:6,
+    minWidth: small ? 80 : 110,
+    boxShadow:'0 1px 6px rgba(0,0,0,0.07)',
+  }}>
+    <span style={{ fontSize: small ? 22 : 26 }}>{icon}</span>
+    <span style={{ fontSize: small ? 10 : 11, fontWeight:600, color:'#1a1a2e', lineHeight:1.3 }}>{label}</span>
+  </div>
+);
+
+/* ── Notice Card ── */
+const NoticeCard = ({ title, time, desc, gradient }) => (
+  <div style={{
+    flexShrink:0, width:200, borderRadius:14,
+    background:gradient, padding:'14px',
+    color:'white',
+  }}>
+    <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+      <span style={{ fontSize:20 }}>📋</span>
+      <div>
+        <p style={{ fontSize:12, fontWeight:700, lineHeight:1.3 }}>{title}</p>
+        <p style={{ fontSize:10, opacity:0.75 }}>{time}</p>
+      </div>
+    </div>
+    <p style={{ fontSize:11, opacity:0.85, lineHeight:1.5 }}>{desc}</p>
   </div>
 );
 
 export default function HomeScreen() {
   return (
-    <div style={{ background: 'white', height: 812, overflowY: 'auto', paddingBottom: 60 }}>
+    <div style={{ height:812, overflowY:'auto', paddingBottom:70, background:'#f0f2f5', position:'relative' }}>
 
-      {/* STATUS BAR */}
-      <div style={{ background: 'white', padding: '10px 16px 4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontWeight: 700, fontSize: 15 }}>9:41</span>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <svg width="16" height="12" viewBox="0 0 16 12"><rect x="0" y="4" width="3" height="8" rx="1" fill="#1a1a2e"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="1" fill="#1a1a2e"/><rect x="9" y="1" width="3" height="11" rx="1" fill="#1a1a2e"/></svg>
-          <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.5C5.5 2.5 3.2 3.5 1.5 5.2L0 3.7C2.1 1.4 5 0 8 0s5.9 1.4 8 3.7L14.5 5.2C12.8 3.5 10.5 2.5 8 2.5z" fill="#1a1a2e"/><path d="M8 6.5c-1.4 0-2.6.5-3.5 1.4L3 6.4C4.3 5.2 6 4.5 8 4.5s3.7.7 5 1.9L11.5 7.9C10.6 7 9.4 6.5 8 6.5z" fill="#1a1a2e"/><circle cx="8" cy="10.5" r="1.5" fill="#1a1a2e"/></svg>
-          <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0" y="1" width="21" height="10" rx="2" stroke="#1a1a2e" strokeWidth="1.2" fill="none"/><rect x="21" y="3.5" width="2" height="5" rx="1" fill="#1a1a2e"/><rect x="1.5" y="2.5" width="14" height="7" rx="1" fill="#1a1a2e"/></svg>
+      {/* Status Bar */}
+      <div style={{
+        background:'#C8102E', padding:'8px 18px 6px',
+        display:'flex', justifyContent:'space-between', alignItems:'center',
+      }}>
+        <span style={{ color:'white', fontSize:14, fontWeight:700 }}>9:41</span>
+        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <SignalIcon /><WifiIcon /><BatteryIcon />
         </div>
       </div>
 
-      {/* TOP BAR */}
-      <div style={{ background: 'white', padding: '6px 16px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
-        {/* Flat selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 20, border: '1.5px solid #e8e8e8', cursor: 'pointer' }}>
-          <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#f97316,#ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            <span style={{ color: 'white', fontSize: 10, fontWeight: 700 }}>R</span>
+      {/* Top Bar */}
+      <div style={{
+        background:'#C8102E', padding:'0 14px 12px',
+        display:'flex', alignItems:'center', gap:8,
+      }}>
+        {/* Society pill */}
+        <div style={{ display:'flex', alignItems:'center', gap:6, flex:1 }}>
+          <div style={{
+            width:34, height:34, borderRadius:'50%',
+            background:'#FF6B00', display:'flex', alignItems:'center', justifyContent:'center',
+            color:'white', fontWeight:800, fontSize:15, flexShrink:0,
+          }}>R</div>
+          <div style={{
+            display:'flex', alignItems:'center', gap:3,
+            background:'rgba(255,255,255,0.2)', borderRadius:20, padding:'4px 10px',
+          }}>
+            <span style={{ color:'white', fontSize:12, fontWeight:600 }}>B-1805</span>
+            <ChevronDown size={14} color="white" />
           </div>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#1a1a2e' }}>B-1805</span>
-          <ChevronDown size={14} color="#888" />
         </div>
 
-        {/* Zomato offer pill */}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 20, border: '1.5px solid #e8e8e8', cursor: 'pointer', overflow: 'hidden' }}>
-          <div style={{ width: 20, height: 20, borderRadius: 4, background: '#e23744', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <span style={{ color: 'white', fontSize: 9, fontWeight: 800 }}>Z</span>
-          </div>
-          <span style={{ fontSize: 11.5, color: '#1a1a2e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>15% OFF on k...</span>
-          <ChevronDown size={13} color="#888" style={{ flexShrink: 0 }} />
+        {/* Zomato pill */}
+        <div style={{
+          display:'flex', alignItems:'center', gap:5,
+          background:'rgba(255,255,255,0.18)', borderRadius:20, padding:'4px 10px',
+          flexShrink:0,
+        }}>
+          <div style={{
+            width:18, height:18, borderRadius:'50%', background:'#e23744',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            color:'white', fontWeight:800, fontSize:9,
+          }}>Z</div>
+          <span style={{ color:'white', fontSize:10, fontWeight:600 }}>15% OFF on k...</span>
         </div>
 
         {/* Icons */}
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <Search size={20} color="#1a1a2e" />
-          <MessageCircle size={20} color="#1a1a2e" />
-          <div style={{ position: 'relative' }}>
-            <Bell size={20} color="#1a1a2e" />
+        <div style={{ display:'flex', alignItems:'center', gap:14, flexShrink:0 }}>
+          <Search size={20} color="white" />
+          <MessageCircle size={20} color="white" />
+          <div style={{ position:'relative' }}>
+            <Bell size={20} color="white" />
             <div style={{
-              position: 'absolute', top: -4, right: -4,
-              background: '#C8102E', width: 16, height: 16, borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              position:'absolute', top:-4, right:-4,
+              width:14, height:14, borderRadius:'50%',
+              background:'#22c55e', border:'1.5px solid #C8102E',
+              display:'flex', alignItems:'center', justifyContent:'center',
             }}>
-              <span style={{ color: 'white', fontSize: 8, fontWeight: 700 }}>N</span>
+              <span style={{ color:'white', fontSize:7, fontWeight:700 }}>N</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* QUICK TILES */}
-      <div style={{ background: 'white', padding: '8px 16px 16px', display: 'flex', gap: 0, justifyContent: 'space-between' }}>
-        {[
-          { label: 'Visitors', bg: '#fff4f0', emoji: '🏠' },
-          { label: 'My Bills', bg: '#fff8f0', emoji: '🧾' },
-          { label: 'Society', bg: '#f0f4ff', emoji: '🏢' },
-          { label: 'Services', bg: '#f8f0ff', emoji: '✨' },
-        ].map(({ label, bg, emoji }) => (
-          <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer', flex: 1 }}>
-            <div style={{ width: 56, height: 56, borderRadius: 16, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26 }}>
-              {emoji}
-            </div>
-            <span style={{ fontSize: 11.5, color: '#1a1a2e', fontWeight: 500, textAlign: 'center' }}>{label}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* PEOPLE ROW */}
-      <div style={{ background: 'white', paddingBottom: 12, marginTop: 2 }}>
-        <div style={{ display: 'flex', gap: 16, paddingLeft: 16, paddingRight: 16, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {[
-            { name: 'Govindara', color: '#7c3aed' },
-            { name: 'Jayesh', color: '#2563eb' },
-            { name: 'Jayesh', color: '#059669' },
-          ].map((p, i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-              <div style={{ position: 'relative' }}>
-                <div style={{
-                  width: 46, height: 46, borderRadius: '50%',
-                  background: p.color,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: 'white', fontWeight: 700, fontSize: 16,
-                }}>
-                  {p.name[0]}
-                </div>
-                <div style={{
-                  position: 'absolute', bottom: 1, right: 1,
-                  width: 10, height: 10, borderRadius: '50%',
-                  background: '#22c55e', border: '2px solid white',
-                }} />
-              </div>
-              <span style={{ fontSize: 10.5, color: '#555', maxWidth: 50, textAlign: 'center', lineHeight: 1.2 }}>{p.name}</span>
-            </div>
-          ))}
-
-          {/* Daily Help */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-            <div style={{
-              width: 46, height: 46, borderRadius: '50%',
-              background: '#f0f2f5', border: '2px dashed #ccc',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
-            }}>🧹</div>
-            <span style={{ fontSize: 10.5, color: '#555', maxWidth: 50, textAlign: 'center', lineHeight: 1.2 }}>Daily Help</span>
-          </div>
-
-          {/* View all */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-            <div style={{
-              width: 46, height: 46, borderRadius: '50%',
-              background: '#f0f2f5',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <ArrowUpRight size={20} color="#888" />
-            </div>
-            <span style={{ fontSize: 10.5, color: '#555' }}>View all</span>
-          </div>
+      {/* Quick Tiles */}
+      <div style={{ background:'white', margin:'10px 12px', borderRadius:16, padding:'14px 10px', boxShadow:'0 2px 12px rgba(0,0,0,0.07)' }}>
+        <div style={{ display:'flex', justifyContent:'space-around' }}>
+          <QuickTile icon="🏠" label="Visitors" bg="#fff3e8" />
+          <QuickTile icon="🧾" label="My Bills" bg="#fffbeb" />
+          <QuickTile icon="🏢" label="Society" bg="#eff6ff" />
+          <QuickTile icon="✨" label="Services" bg="#f5f3ff" />
         </div>
       </div>
 
-      {/* BLINKIT STRIP */}
+      {/* People Row */}
+      <div style={{ background:'white', margin:'0 12px 10px', borderRadius:16, padding:'14px', boxShadow:'0 2px 12px rgba(0,0,0,0.07)' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+          <span style={{ fontSize:13, fontWeight:700, color:'#1a1a2e' }}>People</span>
+          <div style={{ display:'flex', alignItems:'center', gap:4, color:'#C8102E' }}>
+            <span style={{ fontSize:12, fontWeight:600 }}>View all</span>
+            <ArrowUpRight size={14} color="#C8102E" />
+          </div>
+        </div>
+        <div style={{ display:'flex', gap:14, overflowX:'auto', paddingBottom:4 }}>
+          <PersonAvatar initial="G" bg="#7c3aed" name="Govindara" online />
+          <PersonAvatar initial="J" bg="#2563eb" name="Jayesh" online />
+          <PersonAvatar initial="J" bg="#16a34a" name="Jayesh" online />
+          <DailyHelpCircle />
+        </div>
+      </div>
+
+      {/* Blinkit Strip */}
       <div style={{
-        margin: '8px 16px',
-        background: '#f8e71c',
-        borderRadius: 10,
-        padding: '10px 14px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        cursor: 'pointer',
+        margin:'0 12px 10px', borderRadius:14,
+        background:'#f9e03c', padding:'10px 14px',
+        display:'flex', alignItems:'center', gap:10,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ background: 'black', borderRadius: 6, padding: '2px 7px' }}>
-            <span style={{ color: '#f8e71c', fontSize: 12, fontWeight: 900 }}>blinkit</span>
-          </div>
-          <span style={{ fontSize: 12.5, fontWeight: 500, color: '#1a1a2e' }}>Get holi colours, pichkaris and more</span>
-        </div>
-        <ChevronRight size={16} color="#1a1a2e" />
-      </div>
-
-      {/* MAINTENANCE BILL */}
-      <div style={{
-        margin: '0 16px 8px',
-        background: 'white',
-        borderRadius: 10,
-        padding: '12px 14px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        border: '1px solid #e8e8e8',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 22 }}>✂️</span>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 13.5, fontWeight: 600, color: '#1a1a2e' }}>₹45000 Maintenance Bill</span>
-              <span style={{
-                background: '#C8102E', color: 'white',
-                fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
-              }}>DUE</span>
-            </div>
-          </div>
-        </div>
-        <span style={{ fontSize: 13, color: '#C8102E', fontWeight: 600, cursor: 'pointer' }}>Pay Now ›</span>
-      </div>
-
-      {/* SERVICES YOU NEED */}
-      <div style={{ padding: '8px 0', background: 'white', marginTop: 4 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px 10px' }}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e' }}>Services you need</span>
-          <Pencil size={15} color="#888" />
-        </div>
-        <div style={{ display: 'flex', gap: 14, paddingLeft: 16, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {[
-            { label: 'Cleaning Services', card: true },
-            { label: 'Helpdesk', emoji: '🆘' },
-            { label: 'SOS', emoji: '🚨', red: true },
-            { label: 'Security', emoji: '👮' },
-            { label: 'Billing', emoji: '💳' },
-          ].map(({ label, emoji, card, red }) => (
-            <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-              {card ? (
-                <div style={{
-                  width: 72, height: 60, borderRadius: 12,
-                  background: 'linear-gradient(135deg, #e0f2fe, #bae6fd)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 10, color: '#0369a1', fontWeight: 600, textAlign: 'center', padding: 6,
-                }}>Book Professional Clean ✨</div>
-              ) : (
-                <div style={{
-                  width: 52, height: 52, borderRadius: '50%',
-                  background: red ? '#C8102E' : '#f0f2f5',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 22, border: red ? 'none' : '1px solid #e8e8e8',
-                }}>{emoji}</div>
-              )}
-              <span style={{ fontSize: 10.5, color: '#555', textAlign: 'center', maxWidth: 70 }}>{label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* AD BANNER (Zepto + Titan) */}
-      <div style={{ display: 'flex', gap: 10, padding: '12px 16px', background: '#f0f2f5' }}>
-        {/* Zepto Pharmacy */}
         <div style={{
-          flex: 1, borderRadius: 14, overflow: 'hidden',
-          background: 'linear-gradient(135deg, #1e3a5f, #2563eb)',
-          padding: 14, position: 'relative', minHeight: 110,
+          background:'#1a1a1a', borderRadius:8, padding:'3px 8px',
+          display:'flex', alignItems:'center',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <div style={{ background: '#C8102E', borderRadius: 4, padding: '2px 6px' }}>
-              <span style={{ color: 'white', fontSize: 9, fontWeight: 800 }}>zepto</span>
-            </div>
-            <span style={{ background: '#C8102E', color: 'white', fontSize: 8, padding: '2px 5px', borderRadius: 3, fontWeight: 700 }}>pharmacy</span>
+          <span style={{ color:'#f9e03c', fontSize:13, fontWeight:800 }}>blinkit</span>
+        </div>
+        <span style={{ flex:1, fontSize:12, fontWeight:600, color:'#1a1a1a' }}>
+          Get holi colours, pichkaris and more
+        </span>
+        <ChevronRight size={18} color="#1a1a1a" />
+      </div>
+
+      {/* Maintenance Bill Card */}
+      <div style={{
+        margin:'0 12px 10px', borderRadius:14, background:'white',
+        padding:'14px', boxShadow:'0 2px 12px rgba(0,0,0,0.07)',
+        display:'flex', alignItems:'center', gap:12,
+      }}>
+        <span style={{ fontSize:28 }}>✂️</span>
+        <div style={{ flex:1 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+            <span style={{ fontSize:13, fontWeight:700, color:'#1a1a2e' }}>₹45000 Maintenance Bill</span>
+            <span style={{
+              background:'#fef2f2', color:'#C8102E',
+              fontSize:9, fontWeight:700, padding:'2px 6px', borderRadius:6,
+              border:'1px solid #fecaca',
+            }}>DUE</span>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 6, padding: '3px 8px', display: 'inline-block', marginBottom: 6 }}>
-            <span style={{ color: 'white', fontSize: 9, fontWeight: 600 }}>flat 20% off on your first order</span>
+          <span style={{ fontSize:11, color:'#888' }}>Society maintenance for March 2025</span>
+        </div>
+        <span style={{ color:'#C8102E', fontSize:12, fontWeight:700, whiteSpace:'nowrap' }}>Pay Now ›</span>
+      </div>
+
+      {/* Services You Need */}
+      <div style={{ margin:'0 12px 10px' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+            <span style={{ fontSize:14, fontWeight:700, color:'#1a1a2e' }}>Services you need</span>
+            <Pencil size={14} color="#888" />
           </div>
-          <p style={{ color: 'white', fontSize: 11, fontWeight: 600, marginBottom: 10, lineHeight: 1.35 }}>
-            now delivering<br />10,000+ medicines<br />in 10 minutes*
-          </p>
+        </div>
+        <div style={{ display:'flex', gap:10, overflowX:'auto', paddingBottom:4 }}>
+          <div style={{
+            flexShrink:0, borderRadius:14, overflow:'hidden',
+            background:'linear-gradient(135deg,#667eea,#764ba2)',
+            padding:'12px 14px', minWidth:130,
+            boxShadow:'0 2px 8px rgba(102,126,234,0.35)',
+          }}>
+            <span style={{ fontSize:22 }}>✨</span>
+            <p style={{ fontSize:11, fontWeight:700, color:'white', marginTop:6, lineHeight:1.3 }}>
+              Book Professional Clean
+            </p>
+          </div>
+          <ServiceCard icon="🆘" label="Helpdesk" bg="#fff0f0" />
+          <div style={{
+            flexShrink:0, width:60, height:80, borderRadius:30,
+            background:'#C8102E', display:'flex', flexDirection:'column',
+            alignItems:'center', justifyContent:'center', gap:4,
+            boxShadow:'0 2px 8px rgba(200,16,46,0.3)',
+          }}>
+            <span style={{ fontSize:22 }}>🚨</span>
+            <span style={{ fontSize:9, fontWeight:700, color:'white' }}>SOS</span>
+          </div>
+          <ServiceCard icon="👮" label="Security" bg="#f0f9ff" />
+          <ServiceCard icon="💳" label="Billing" bg="#f0fdf4" />
+        </div>
+      </div>
+
+      {/* Ad Banners */}
+      <div style={{ margin:'0 12px 10px', display:'flex', gap:10 }}>
+        {/* Zepto */}
+        <div style={{
+          flex:1, borderRadius:14, overflow:'hidden',
+          background:'linear-gradient(135deg,#0c1445,#1a237e)',
+          padding:'14px', display:'flex', flexDirection:'column', gap:6,
+        }}>
+          <div style={{ display:'flex', alignItems:'baseline', gap:2 }}>
+            <span style={{ color:'white', fontSize:15, fontWeight:800 }}>zepto</span>
+            <span style={{ color:'#82b0ff', fontSize:10, fontWeight:600 }}>pharmacy</span>
+          </div>
+          <p style={{ color:'white', fontSize:11, fontWeight:600, lineHeight:1.4 }}>flat 20% off</p>
           <button style={{
-            background: '#C8102E', color: 'white',
-            border: 'none', borderRadius: 6, padding: '5px 12px',
-            fontSize: 11, fontWeight: 700, cursor: 'pointer',
+            background:'#C8102E', color:'white', border:'none', borderRadius:8,
+            padding:'5px 10px', fontSize:10, fontWeight:700, cursor:'pointer', alignSelf:'flex-start',
           }}>Order Now</button>
         </div>
-
         {/* Titan */}
         <div style={{
-          flex: 1, borderRadius: 14, overflow: 'hidden',
-          background: 'linear-gradient(135deg, #7f1d1d, #b91c1c)',
-          padding: 14, position: 'relative', minHeight: 110,
-          display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+          flex:1, borderRadius:14, overflow:'hidden',
+          background:'linear-gradient(135deg,#7f1d1d,#450a0a)',
+          padding:'14px', display:'flex', flexDirection:'column', gap:6,
         }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
-              <div style={{ background: 'white', borderRadius: 4, padding: '2px 6px' }}>
-                <span style={{ color: '#b91c1c', fontSize: 10, fontWeight: 900 }}>TITAN</span>
-              </div>
-            </div>
-            <p style={{ color: 'white', fontSize: 18, fontWeight: 800, lineHeight: 1.1, marginBottom: 4 }}>Buy 1<br />Get 1 Free</p>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11 }}>Frames and<br />Sunglasses</p>
+          <div style={{
+            background:'white', borderRadius:6, padding:'2px 8px',
+            display:'inline-flex', alignSelf:'flex-start',
+          }}>
+            <span style={{ color:'#7f1d1d', fontSize:12, fontWeight:800, letterSpacing:'0.1em' }}>TITAN</span>
           </div>
+          <p style={{ color:'white', fontSize:11, fontWeight:600, lineHeight:1.4 }}>Buy 1 Get 1 Free</p>
           <button style={{
-            background: 'rgba(255,255,255,0.2)', color: 'white',
-            border: '1px solid rgba(255,255,255,0.4)',
-            borderRadius: 6, padding: '5px 12px',
-            fontSize: 11, fontWeight: 600, cursor: 'pointer',
-            marginTop: 10,
+            background:'rgba(255,255,255,0.15)', color:'white', border:'1px solid rgba(255,255,255,0.3)',
+            borderRadius:8, padding:'5px 10px', fontSize:10, fontWeight:700, cursor:'pointer', alignSelf:'flex-start',
           }}>Visit Now</button>
         </div>
       </div>
 
-      {/* SOCIETY NOTICES */}
-      <div style={{ padding: '4px 16px 12px', background: 'white', marginTop: 4 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 10, paddingTop: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e' }}>Society Notices</span>
-            <span style={{ background: '#C8102E', color: 'white', fontSize: 10, fontWeight: 700, width: 18, height: 18, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
+      {/* Society Notices */}
+      <div style={{ margin:'0 12px 10px' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <span style={{ fontSize:14, fontWeight:700, color:'#1a1a2e' }}>Society Notices</span>
+            <div style={{
+              background:'#C8102E', color:'white', borderRadius:'50%',
+              width:18, height:18, display:'flex', alignItems:'center', justifyContent:'center',
+              fontSize:10, fontWeight:700,
+            }}>3</div>
           </div>
-          <span style={{ fontSize: 12, color: '#C8102E', fontWeight: 600, cursor: 'pointer' }}>See all</span>
+          <span style={{ color:'#C8102E', fontSize:12, fontWeight:600 }}>See all</span>
         </div>
-        <div style={{ display: 'flex', gap: 12, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {[
-            { title: 'Experience the GIIS di...', desc: 'Comprehensive 9G Teaching Framework, Skill Comprehensive 9GEMS Teaching Framework, Skill Comprehensive 9GEMS...', time: '2d ago', color: '#7c3aed' },
-            { title: 'Emergency maintenance...', desc: 'Comprehensive 9G Teaching Framework, Skill Comprehensive 9GEMS Teaching Framework, Skill Comprehensive 9GEMS...', time: '3d ago', color: '#2563eb' },
-          ].map((n, i) => (
-            <div key={i} style={{
-              flexShrink: 0, width: 155,
-              border: '1px solid #e8e8e8', borderRadius: 10,
-              overflow: 'hidden', cursor: 'pointer',
-            }}>
-              <div style={{ height: 60, background: `linear-gradient(135deg, ${n.color}22, ${n.color}44)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
-                📋
-              </div>
-              <div style={{ padding: '8px 10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4 }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#C8102E', flexShrink: 0 }} />
-                  <span style={{ fontSize: 11.5, fontWeight: 600, color: '#1a1a2e', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{n.title}</span>
-                </div>
-                <span style={{ fontSize: 9.5, color: '#888', display: 'block', marginBottom: 4 }}>{n.time}</span>
-                <p style={{ fontSize: 10.5, color: '#555', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{n.desc}</p>
-              </div>
-            </div>
-          ))}
+        <div style={{ display:'flex', gap:10, overflowX:'auto', paddingBottom:4 }}>
+          <NoticeCard
+            title="Water Supply Disruption"
+            time="2 hours ago"
+            desc="Water supply will be off from 10am to 2pm on Friday for maintenance."
+            gradient="linear-gradient(135deg,#7c3aed,#4c1d95)"
+          />
+          <NoticeCard
+            title="Parking Rules Update"
+            time="1 day ago"
+            desc="New parking slots have been allocated. Check the notice board for details."
+            gradient="linear-gradient(135deg,#2563eb,#1e3a8a)"
+          />
         </div>
       </div>
 
-      {/* SALE TAB (right edge) — sticky within scroll */}
+      {/* SALE M tab */}
       <div style={{
-        position: 'sticky', top: '45%',
-        float: 'right', marginRight: 0,
-        background: '#e91e8c', color: 'white',
-        writingMode: 'vertical-rl', textOrientation: 'mixed',
-        padding: '10px 6px', fontSize: 11, fontWeight: 700,
-        borderRadius: '8px 0 0 8px',
-        zIndex: 30, cursor: 'pointer',
-        letterSpacing: 1,
+        position:'absolute', right:-22, top:320,
+        background:'#ec4899', color:'white',
+        padding:'10px 6px', borderRadius:'6px 0 0 6px',
+        writingMode:'vertical-rl', textOrientation:'mixed',
+        fontSize:11, fontWeight:800, letterSpacing:'0.08em',
+        transform:'rotate(180deg)',
+        zIndex:10,
       }}>SALE M</div>
 
-      {/* BOTTOM NAV — sticky at bottom of scroll container */}
+      {/* Bottom Nav */}
       <div style={{
-        position: 'sticky', bottom: 0, left: 0, right: 0,
-        background: 'white', borderTop: '1px solid #e8e8e8',
-        display: 'flex', zIndex: 20,
+        position:'sticky', bottom:0, left:0, right:0,
+        background:'white', borderTop:'1px solid #e8e8e8',
+        display:'flex', justifyContent:'space-around', alignItems:'center',
+        padding:'10px 0 14px', zIndex:20,
       }}>
         {[
-          { label: 'Home', emoji: '🏠', active: true },
-          { label: 'Visitors', emoji: '👥' },
-          { label: 'Society', emoji: '🏢' },
-          { label: 'Profile', emoji: '👤' },
-        ].map(({ label, emoji, active }) => (
-          <div key={label} style={{
-            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-            padding: '8px 0 4px', cursor: 'pointer',
-          }}>
-            <span style={{ fontSize: 22 }}>{emoji}</span>
-            <span style={{ fontSize: 10, fontWeight: active ? 700 : 400, color: active ? '#C8102E' : '#888', marginTop: 2 }}>{label}</span>
-            {active && <div style={{ width: 20, height: 2, background: '#C8102E', borderRadius: 2, marginTop: 2 }} />}
+          { icon:'🏠', label:'Home', active:true },
+          { icon:'👥', label:'Visitors', active:false },
+          { icon:'🏢', label:'Society', active:false },
+          { icon:'👤', label:'Profile', active:false },
+        ].map(({ icon, label, active }) => (
+          <div key={label} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, cursor:'pointer' }}>
+            <span style={{ fontSize:22 }}>{icon}</span>
+            <span style={{ fontSize:10, fontWeight: active ? 700 : 400, color: active ? '#C8102E' : '#888' }}>{label}</span>
           </div>
         ))}
       </div>
