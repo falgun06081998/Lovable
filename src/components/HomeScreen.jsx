@@ -72,16 +72,16 @@ const DailyHelpCircle = () => (
 );
 
 /* ── Service Card ── */
-const ServiceCard = ({ icon, label, bg, small }) => (
+const ServiceCard = ({ icon, label, bg }) => (
   <div style={{
     flexShrink:0, borderRadius:14, background:bg||'#f5f5f5',
-    padding: small ? '10px 12px' : '12px 14px',
+    padding:'12px 14px',
     display:'flex', flexDirection:'column', gap:6,
-    minWidth: small ? 80 : 110,
+    minWidth:80,
     boxShadow:'0 1px 6px rgba(0,0,0,0.07)',
   }}>
-    <span style={{ fontSize: small ? 22 : 26 }}>{icon}</span>
-    <span style={{ fontSize: small ? 10 : 11, fontWeight:600, color:'#1a1a2e', lineHeight:1.3 }}>{label}</span>
+    <span style={{ fontSize:22 }}>{icon}</span>
+    <span style={{ fontSize:10, fontWeight:600, color:'#1a1a2e', lineHeight:1.3 }}>{label}</span>
   </div>
 );
 
@@ -123,7 +123,6 @@ export default function HomeScreen() {
         background:'#C8102E', padding:'0 14px 12px',
         display:'flex', alignItems:'center', gap:8,
       }}>
-        {/* Society pill */}
         <div style={{ display:'flex', alignItems:'center', gap:6, flex:1 }}>
           <div style={{
             width:34, height:34, borderRadius:'50%',
@@ -138,8 +137,6 @@ export default function HomeScreen() {
             <ChevronDown size={14} color="white" />
           </div>
         </div>
-
-        {/* Zomato pill */}
         <div style={{
           display:'flex', alignItems:'center', gap:5,
           background:'rgba(255,255,255,0.18)', borderRadius:20, padding:'4px 10px',
@@ -152,8 +149,6 @@ export default function HomeScreen() {
           }}>Z</div>
           <span style={{ color:'white', fontSize:10, fontWeight:600 }}>15% OFF on k...</span>
         </div>
-
-        {/* Icons */}
         <div style={{ display:'flex', alignItems:'center', gap:14, flexShrink:0 }}>
           <Search size={20} color="white" />
           <MessageCircle size={20} color="white" />
@@ -204,19 +199,14 @@ export default function HomeScreen() {
         background:'#f9e03c', padding:'10px 14px',
         display:'flex', alignItems:'center', gap:10,
       }}>
-        <div style={{
-          background:'#1a1a1a', borderRadius:8, padding:'3px 8px',
-          display:'flex', alignItems:'center',
-        }}>
+        <div style={{ background:'#1a1a1a', borderRadius:8, padding:'3px 8px' }}>
           <span style={{ color:'#f9e03c', fontSize:13, fontWeight:800 }}>blinkit</span>
         </div>
-        <span style={{ flex:1, fontSize:12, fontWeight:600, color:'#1a1a1a' }}>
-          Get holi colours, pichkaris and more
-        </span>
+        <span style={{ flex:1, fontSize:12, fontWeight:600, color:'#1a1a1a' }}>Get holi colours, pichkaris and more</span>
         <ChevronRight size={18} color="#1a1a1a" />
       </div>
 
-      {/* Maintenance Bill Card */}
+      {/* Maintenance Bill */}
       <div style={{
         margin:'0 12px 10px', borderRadius:14, background:'white',
         padding:'14px', boxShadow:'0 2px 12px rgba(0,0,0,0.07)',
@@ -250,19 +240,15 @@ export default function HomeScreen() {
             flexShrink:0, borderRadius:14, overflow:'hidden',
             background:'linear-gradient(135deg,#667eea,#764ba2)',
             padding:'12px 14px', minWidth:130,
-            boxShadow:'0 2px 8px rgba(102,126,234,0.35)',
           }}>
             <span style={{ fontSize:22 }}>✨</span>
-            <p style={{ fontSize:11, fontWeight:700, color:'white', marginTop:6, lineHeight:1.3 }}>
-              Book Professional Clean
-            </p>
+            <p style={{ fontSize:11, fontWeight:700, color:'white', marginTop:6, lineHeight:1.3 }}>Book Professional Clean</p>
           </div>
           <ServiceCard icon="🆘" label="Helpdesk" bg="#fff0f0" />
           <div style={{
             flexShrink:0, width:60, height:80, borderRadius:30,
             background:'#C8102E', display:'flex', flexDirection:'column',
             alignItems:'center', justifyContent:'center', gap:4,
-            boxShadow:'0 2px 8px rgba(200,16,46,0.3)',
           }}>
             <span style={{ fontSize:22 }}>🚨</span>
             <span style={{ fontSize:9, fontWeight:700, color:'white' }}>SOS</span>
@@ -274,9 +260,8 @@ export default function HomeScreen() {
 
       {/* Ad Banners */}
       <div style={{ margin:'0 12px 10px', display:'flex', gap:10 }}>
-        {/* Zepto */}
         <div style={{
-          flex:1, borderRadius:14, overflow:'hidden',
+          flex:1, borderRadius:14,
           background:'linear-gradient(135deg,#0c1445,#1a237e)',
           padding:'14px', display:'flex', flexDirection:'column', gap:6,
         }}>
@@ -285,28 +270,18 @@ export default function HomeScreen() {
             <span style={{ color:'#82b0ff', fontSize:10, fontWeight:600 }}>pharmacy</span>
           </div>
           <p style={{ color:'white', fontSize:11, fontWeight:600, lineHeight:1.4 }}>flat 20% off</p>
-          <button style={{
-            background:'#C8102E', color:'white', border:'none', borderRadius:8,
-            padding:'5px 10px', fontSize:10, fontWeight:700, cursor:'pointer', alignSelf:'flex-start',
-          }}>Order Now</button>
+          <button style={{ background:'#C8102E', color:'white', border:'none', borderRadius:8, padding:'5px 10px', fontSize:10, fontWeight:700, cursor:'pointer', alignSelf:'flex-start' }}>Order Now</button>
         </div>
-        {/* Titan */}
         <div style={{
-          flex:1, borderRadius:14, overflow:'hidden',
+          flex:1, borderRadius:14,
           background:'linear-gradient(135deg,#7f1d1d,#450a0a)',
           padding:'14px', display:'flex', flexDirection:'column', gap:6,
         }}>
-          <div style={{
-            background:'white', borderRadius:6, padding:'2px 8px',
-            display:'inline-flex', alignSelf:'flex-start',
-          }}>
+          <div style={{ background:'white', borderRadius:6, padding:'2px 8px', display:'inline-flex', alignSelf:'flex-start' }}>
             <span style={{ color:'#7f1d1d', fontSize:12, fontWeight:800, letterSpacing:'0.1em' }}>TITAN</span>
           </div>
           <p style={{ color:'white', fontSize:11, fontWeight:600, lineHeight:1.4 }}>Buy 1 Get 1 Free</p>
-          <button style={{
-            background:'rgba(255,255,255,0.15)', color:'white', border:'1px solid rgba(255,255,255,0.3)',
-            borderRadius:8, padding:'5px 10px', fontSize:10, fontWeight:700, cursor:'pointer', alignSelf:'flex-start',
-          }}>Visit Now</button>
+          <button style={{ background:'rgba(255,255,255,0.15)', color:'white', border:'1px solid rgba(255,255,255,0.3)', borderRadius:8, padding:'5px 10px', fontSize:10, fontWeight:700, cursor:'pointer', alignSelf:'flex-start' }}>Visit Now</button>
         </div>
       </div>
 
@@ -315,27 +290,13 @@ export default function HomeScreen() {
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             <span style={{ fontSize:14, fontWeight:700, color:'#1a1a2e' }}>Society Notices</span>
-            <div style={{
-              background:'#C8102E', color:'white', borderRadius:'50%',
-              width:18, height:18, display:'flex', alignItems:'center', justifyContent:'center',
-              fontSize:10, fontWeight:700,
-            }}>3</div>
+            <div style={{ background:'#C8102E', color:'white', borderRadius:'50%', width:18, height:18, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700 }}>3</div>
           </div>
           <span style={{ color:'#C8102E', fontSize:12, fontWeight:600 }}>See all</span>
         </div>
         <div style={{ display:'flex', gap:10, overflowX:'auto', paddingBottom:4 }}>
-          <NoticeCard
-            title="Water Supply Disruption"
-            time="2 hours ago"
-            desc="Water supply will be off from 10am to 2pm on Friday for maintenance."
-            gradient="linear-gradient(135deg,#7c3aed,#4c1d95)"
-          />
-          <NoticeCard
-            title="Parking Rules Update"
-            time="1 day ago"
-            desc="New parking slots have been allocated. Check the notice board for details."
-            gradient="linear-gradient(135deg,#2563eb,#1e3a8a)"
-          />
+          <NoticeCard title="Water Supply Disruption" time="2 hours ago" desc="Water supply will be off from 10am to 2pm on Friday for maintenance." gradient="linear-gradient(135deg,#7c3aed,#4c1d95)" />
+          <NoticeCard title="Parking Rules Update" time="1 day ago" desc="New parking slots have been allocated. Check the notice board for details." gradient="linear-gradient(135deg,#2563eb,#1e3a8a)" />
         </div>
       </div>
 

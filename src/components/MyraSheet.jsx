@@ -17,7 +17,7 @@ function detectIntent(text) {
   if (cBrand || t.includes('cab') || t.includes('taxi')) return { category:'cab', slots:{ cabCompany: cBrand ? capitalize(cBrand) : undefined, date:extractDate(t), time:extractTime(t) } };
   const gWord = GUEST_WORDS.find(w => t.includes(w));
   if (gWord) return { category:'guest', slots:{ subCategory:extractSubCategory(t), date:extractDate(t), time:extractTime(t) } };
-  if (['pre-approv','pre approv','gate pass','delivery','pre approve'].some(w => t.includes(w))) return { category:null, slots:{} };
+  if (['pre-approv','pre approv','gate pass','pre approve'].some(w => t.includes(w))) return { category:null, slots:{} };
   return null;
 }
 
@@ -111,7 +111,7 @@ function getCategoryBadge(category, slots) {
   return 'Visitor';
 }
 
-// ── Subcomponents ────────────────────────────────────────────
+// ── Sub-components ────────────────────────────────────────────
 function ListeningWave() {
   return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:4, padding:'10px 0' }}>
@@ -141,9 +141,7 @@ function ThinkingDots() {
 function MessageBubble({ m }) {
   const isMyra = m.role === 'myra';
   return (
-    <div className="animate-fade-in" style={{
-      display:'flex', justifyContent: isMyra ? 'flex-start' : 'flex-end',
-    }}>
+    <div className="animate-fade-in" style={{ display:'flex', justifyContent: isMyra ? 'flex-start' : 'flex-end' }}>
       {isMyra && (
         <div style={{
           width:28, height:28, borderRadius:'50%', background:'#C8102E',
@@ -189,11 +187,11 @@ export default function MyraSheet({ isClosing, onClose }) {
   const speechRef = useRef(null);
   const chatRef = useRef(null);
   const msgIdRef = useRef(0);
-
   const pendingSlotRef = useRef(null);
   const flowCatRef = useRef(null);
   const slotsRef = useRef({});
   const showCardRef = useRef(false);
+  const processInputRef = useRef(null);
 
   useEffect(() => { pendingSlotRef.current = pendingSlot; }, [pendingSlot]);
   useEffect(() => { flowCatRef.current = flowCat; }, [flowCat]);
@@ -205,9 +203,7 @@ export default function MyraSheet({ isClosing, onClose }) {
   const addMyraMsg = useCallback((text, chips = null) => {
     const id = nextId();
     setMessages(prev => [...prev, { id, role:'myra', text }]);
-    if (chips) {
-      setActiveChips({ id, chips, pendingSlot: chips.pendingSlot });
-    }
+    if (chips) setActiveChips({ id, chips });
     return id;
   }, []);
 
@@ -236,16 +232,14 @@ export default function MyraSheet({ isClosing, onClose }) {
       if (e.results[e.results.length-1].isFinal) {
         setTranscript('');
         addUserMsg(t);
-        processInputRef.current(t);
+        if (processInputRef.current) processInputRef.current(t);
       }
     };
     rec.onerror = () => { micAvailRef.current = false; setVoiceState('idle'); };
-    rec.onend = () => { setVoiceState(v => v === 'listening' ? 'idle' : v); };
+    rec.onend = () => setVoiceState(v => v === 'listening' ? 'idle' : v);
     rec.start();
     speechRef.current = rec;
   }, [addUserMsg]);
-
-  const processInputRef = useRef(null);
 
   const introChips = [
     {l:'Pre-approve delivery', v:'delivery tomorrow'},
@@ -255,10 +249,10 @@ export default function MyraSheet({ isClosing, onClose }) {
   ];
 
   const categoryChips = [
-    {l:'📦 Delivery', v:'delivery'},
-    {l:'🚖 Cab', v:'cab'},
-    {l:'👤 Guest', v:'guest'},
-    {l:'🎉 Group invite', v:'group'},
+    {l:'📦 Delivery', v:'delivery', isCat:true},
+    {l:'🚖 Cab', v:'cab', isCat:true},
+    {l:'👤 Guest', v:'guest', isCat:true},
+    {l:'🎉 Group invite', v:'group', isCat:true},
   ];
 
   const demoChips = [
@@ -275,23 +269,21 @@ export default function MyraSheet({ isClosing, onClose }) {
     if (!q) {
       addMyraMsg("Here's a summary — does everything look right?");
       setShowCard(true);
+      showCardRef.current = true;
       setVoiceState('idle');
       return;
     }
     setPendingSlot(q.pendingSlot);
     pendingSlotRef.current = q.pendingSlot;
-    const chipsWithSlot = q.chips.map(c => c);
-    chipsWithSlot.pendingSlot = q.pendingSlot;
-    addMyraMsg(q.question, chipsWithSlot);
+    addMyraMsg(q.question, q.chips);
     setTimeout(() => startListening(), 800);
   }, [addMyraMsg, startListening]);
 
-  const fillSlot = useCallback((slot, rawText, currentSlots, category) => {
-    let value = rawText;
-    if (slot === 'date') value = extractDate(rawText.toLowerCase()) || rawText;
-    if (slot === 'time') value = extractTime(rawText.toLowerCase()) || rawText;
-    if (slot === 'subCategory') value = extractSubCategory(rawText.toLowerCase()) || rawText;
-
+  const fillSlot = useCallback((slot, rawVal, currentSlots, category) => {
+    let value = rawVal;
+    if (slot === 'date') value = extractDate(rawVal.toLowerCase()) || rawVal;
+    if (slot === 'time') value = extractTime(rawVal.toLowerCase()) || rawVal;
+    if (slot === 'subCategory') value = extractSubCategory(rawVal.toLowerCase()) || rawVal;
     const newSlots = { ...currentSlots, [slot]: value === null ? undefined : value };
     setSlots(newSlots);
     slotsRef.current = newSlots;
@@ -305,27 +297,28 @@ export default function MyraSheet({ isClosing, onClose }) {
     setVoiceState('thinking');
     stopListening();
     setTimeout(() => {
-      const currentPendingSlot = pendingSlotRef.current;
-      const currentCat = flowCatRef.current;
-      const currentSlots = slotsRef.current;
-      const currentShowCard = showCardRef.current;
+      const ps = pendingSlotRef.current;
+      const cat = flowCatRef.current;
+      const sl = slotsRef.current;
+      const sc = showCardRef.current;
 
-      if (currentPendingSlot) {
-        fillSlot(currentPendingSlot, text, currentSlots, currentCat);
+      if (ps) {
+        fillSlot(ps, text, sl, cat);
         setVoiceState('idle');
         return;
       }
 
-      if (currentShowCard && CONFIRM_WORDS.some(w => text.toLowerCase().includes(w))) {
+      if (sc && CONFIRM_WORDS.some(w => text.toLowerCase().includes(w))) {
         setShowSuccess(true);
         setShowCard(false);
+        showCardRef.current = false;
         setVoiceState('idle');
         return;
       }
 
       const result = detectIntent(text);
       if (!result) {
-        addMyraMsg("Hmm, I didn't quite get that. You can ask me to pre-approve a delivery, cab, or guest. Or tap one of the chips below! 😊");
+        addMyraMsg("Hmm, I didn't quite get that. 🤔 Try asking me to pre-approve a delivery, cab, or guest.");
         setActiveChips({ chips: introChips });
         setVoiceState('idle');
         return;
@@ -334,23 +327,17 @@ export default function MyraSheet({ isClosing, onClose }) {
       addMyraMsg("Got it! Let me set up the pre-approval for you. 👍");
 
       if (!result.category) {
-        setFlowCat(null);
-        flowCatRef.current = null;
-        const chips = categoryChips;
-        chips.pendingSlot = 'category';
-        addMyraMsg("What kind of visitor are you expecting?", chips);
+        setFlowCat(null); flowCatRef.current = null;
+        addMyraMsg("What kind of visitor are you expecting?", categoryChips);
         setVoiceState('idle');
         return;
       }
 
       const newSlots = { ...result.slots };
       Object.keys(newSlots).forEach(k => { if (newSlots[k] === null) delete newSlots[k]; });
-      setFlowCat(result.category);
-      flowCatRef.current = result.category;
-      setSlots(newSlots);
-      slotsRef.current = newSlots;
-      setPendingSlot(null);
-      pendingSlotRef.current = null;
+      setFlowCat(result.category); flowCatRef.current = result.category;
+      setSlots(newSlots); slotsRef.current = newSlots;
+      setPendingSlot(null); pendingSlotRef.current = null;
       setVoiceState('idle');
       askNext(result.category, newSlots);
     }, 1200);
@@ -360,10 +347,7 @@ export default function MyraSheet({ isClosing, onClose }) {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      const chips = [...introChips];
-      chips.pendingSlot = null;
-      addMyraMsg("Hi! I'm Myra, your society assistant. 👋\nWhat would you like to do today?", chips);
-
+      addMyraMsg("Hi! I'm Myra, your society assistant. 👋\nWhat would you like to do today?", introChips);
       if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         micAvailRef.current = true;
         startListening();
@@ -371,83 +355,59 @@ export default function MyraSheet({ isClosing, onClose }) {
         micAvailRef.current = false;
       }
     }, 400);
-    return () => {
-      clearTimeout(t);
-      stopListening();
-    };
+    return () => { clearTimeout(t); stopListening(); };
   }, []); // eslint-disable-line
 
   useEffect(() => {
-    if (chatRef.current) {
-      chatRef.current.scrollTop = chatRef.current.scrollHeight;
-    }
+    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [messages, activeChips, voiceState, showCard, showSuccess]);
 
   const handleChipTap = useCallback((chip) => {
-    const { l, v, demo } = chip;
+    const { l, v, demo, isCat } = chip;
     setActiveChips(null);
     setShowCustomTime(false);
 
-    if (v === '__custom__') {
-      setShowCustomTime(true);
-      return;
-    }
+    if (v === '__custom__') { setShowCustomTime(true); return; }
 
     if (v === '__else__') {
       addUserMsg(l);
-      const chips = categoryChips;
-      chips.pendingSlot = 'category';
-      addMyraMsg("What kind of visitor are you expecting?", chips);
+      addMyraMsg("What kind of visitor are you expecting?", categoryChips);
       return;
     }
 
-    if (pendingSlotRef.current === 'category') {
+    if (isCat) {
       addUserMsg(l);
       const category = v;
-      setFlowCat(category);
-      flowCatRef.current = category;
-      const newSlots = {};
-      setSlots(newSlots);
-      slotsRef.current = newSlots;
-      setPendingSlot(null);
-      pendingSlotRef.current = null;
-      askNext(category, newSlots);
+      setFlowCat(category); flowCatRef.current = category;
+      const ns = {}; setSlots(ns); slotsRef.current = ns;
+      setPendingSlot(null); pendingSlotRef.current = null;
+      askNext(category, ns);
       return;
     }
 
     if (v === null) {
       addUserMsg('Skip');
       const slot = pendingSlotRef.current;
-      const currentSlots = { ...slotsRef.current };
-      if (slot === 'maxEntries') {
-        currentSlots.maxEntries = null;
-        setSlots(currentSlots);
-        slotsRef.current = currentSlots;
-      } else if (slot === 'cabCompany') {
-        currentSlots.cabCompany = null;
-        setSlots(currentSlots);
-        slotsRef.current = currentSlots;
-      }
-      setPendingSlot(null);
-      pendingSlotRef.current = null;
-      askNext(flowCatRef.current, currentSlots);
+      const cs = { ...slotsRef.current };
+      if (slot) { cs[slot] = null; setSlots(cs); slotsRef.current = cs; }
+      setPendingSlot(null); pendingSlotRef.current = null;
+      askNext(flowCatRef.current, cs);
       return;
     }
 
     addUserMsg(l);
 
-    if (demo || pendingSlotRef.current === null) {
-      processInputRef.current(v);
+    if (demo || !pendingSlotRef.current) {
+      if (processInputRef.current) processInputRef.current(v);
       return;
     }
 
-    const slot = pendingSlotRef.current;
-    fillSlot(slot, v, slotsRef.current, flowCatRef.current);
+    fillSlot(pendingSlotRef.current, v, slotsRef.current, flowCatRef.current);
   }, [addUserMsg, addMyraMsg, askNext, fillSlot]);
 
   const handleConfirm = useCallback(() => {
+    setShowCard(false); showCardRef.current = false;
     setShowSuccess(true);
-    setShowCard(false);
   }, []);
 
   const handleSendText = useCallback(() => {
@@ -455,7 +415,7 @@ export default function MyraSheet({ isClosing, onClose }) {
     if (!t) return;
     setTextInput('');
     addUserMsg(t);
-    processInputRef.current(t);
+    if (processInputRef.current) processInputRef.current(t);
   }, [textInput, addUserMsg]);
 
   const handleConfirmCustomTime = useCallback(() => {
@@ -470,16 +430,13 @@ export default function MyraSheet({ isClosing, onClose }) {
     fillSlot(slot, timeStr, slotsRef.current, flowCatRef.current);
   }, [customTimeVal, addUserMsg, fillSlot]);
 
+  // ── ConfirmCard ──
   function ConfirmCard() {
     const rows = buildConfirmRows(flowCat, slots);
     const badge = getCategoryBadge(flowCat, slots);
-
     if (cardEditing) {
       return (
-        <div className="animate-card-up" style={{
-          background:'white', borderTop:'1px solid #e8e8e8',
-          padding:'14px 16px', flexShrink:0,
-        }}>
+        <div className="animate-card-up" style={{ background:'white', borderTop:'1px solid #e8e8e8', padding:'14px 16px', flexShrink:0 }}>
           <p style={{ fontSize:13, fontWeight:600, marginBottom:12 }}>Edit details</p>
           {rows.map(([label, value]) => (
             <div key={label} style={{ marginBottom:10 }}>
@@ -487,76 +444,45 @@ export default function MyraSheet({ isClosing, onClose }) {
               <input
                 value={editSlots[label] !== undefined ? editSlots[label] : (value||'')}
                 onChange={e => setEditSlots(s => ({ ...s, [label]: e.target.value }))}
-                style={{
-                  width:'100%', border:'1px solid #e8e8e8', borderRadius:8,
-                  padding:'8px 10px', fontSize:13, marginTop:4, outline:'none',
-                }}
+                style={{ width:'100%', border:'1px solid #e0e0e0', borderRadius:8, padding:'8px 10px', fontSize:13, marginTop:4, outline:'none' }}
               />
             </div>
           ))}
-          <button
-            onClick={() => setCardEditing(false)}
-            style={{
-              width:'100%', background:'#C8102E', color:'white', border:'none',
-              borderRadius:10, padding:'11px', fontSize:13, fontWeight:700, cursor:'pointer',
-            }}
-          >Done editing</button>
+          <button onClick={() => setCardEditing(false)} style={{ width:'100%', background:'#C8102E', color:'white', border:'none', borderRadius:10, padding:'11px', fontSize:13, fontWeight:700, cursor:'pointer' }}>Done editing</button>
         </div>
       );
     }
-
     return (
-      <div className="animate-card-up" style={{
-        background:'white', borderTop:'1px solid #e8e8e8',
-        padding:'14px 16px', flexShrink:0,
-      }}>
+      <div className="animate-card-up" style={{ background:'white', borderTop:'1px solid #e8e8e8', padding:'14px 16px', flexShrink:0 }}>
         <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
           <span style={{ fontSize:13, fontWeight:600, color:'#1a1a2e' }}>Create pre-approval</span>
-          <span style={{
-            background:'#e0eaff', color:'#2563eb', fontSize:10, fontWeight:600,
-            padding:'2px 8px', borderRadius:10,
-          }}>{badge}</span>
+          <span style={{ background:'#e0eaff', color:'#2563eb', fontSize:10, fontWeight:600, padding:'2px 8px', borderRadius:10 }}>{badge}</span>
         </div>
         {rows.map(([label, value]) => {
-          const displayValue = editSlots[label] !== undefined ? editSlots[label] : (value || '—');
+          const display = editSlots[label] !== undefined ? editSlots[label] : (value||'—');
           return (
             <div key={label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
               <span style={{ fontSize:12, color:'#888' }}>{label}</span>
-              <span style={{ fontSize:12, fontWeight:600, color:'#1a1a2e' }}>{displayValue || '—'}</span>
+              <span style={{ fontSize:12, fontWeight:600, color:'#1a1a2e' }}>{display}</span>
             </div>
           );
         })}
         <div style={{ display:'flex', gap:10, marginTop:14 }}>
-          <button
-            onClick={handleConfirm}
-            style={{
-              flex:1, background:'#C8102E', color:'white', border:'none',
-              borderRadius:10, padding:'11px', fontSize:13, fontWeight:700, cursor:'pointer',
-            }}
-          >Confirm ✓</button>
-          <button
-            onClick={() => {
-              setEditSlots(Object.fromEntries(rows.map(([l, v]) => [l, v||''])));
-              setCardEditing(true);
-            }}
-            style={{
-              flex:1, background:'#f0f0f0', color:'#555', border:'none',
-              borderRadius:10, padding:'11px', fontSize:13, fontWeight:600, cursor:'pointer',
-            }}
-          >Edit ✎</button>
+          <button onClick={handleConfirm} style={{ flex:1, background:'#C8102E', color:'white', border:'none', borderRadius:10, padding:'11px', fontSize:13, fontWeight:700, cursor:'pointer' }}>Confirm ✓</button>
+          <button onClick={() => { setEditSlots(Object.fromEntries(rows.map(([l,v]) => [l,v||'']))); setCardEditing(true); }} style={{ flex:1, background:'#f0f0f0', color:'#555', border:'none', borderRadius:10, padding:'11px', fontSize:13, fontWeight:600, cursor:'pointer' }}>Edit ✎</button>
         </div>
       </div>
     );
   }
 
+  // ── SuccessScreen ──
   function SuccessScreen() {
     const rows = buildConfirmRows(flowCat, slots);
     const badge = getCategoryBadge(flowCat, slots);
+    const visitorRow = rows.find(r => r[0] === 'Visitor' || r[0] === 'Event');
     const dateRow = rows.find(r => r[0] === 'Date');
-
-    const shareText = `Pre-approval created!\nType: ${badge}\n${dateRow ? 'Date: '+dateRow[1]+'\n' : ''}Passcode: ${passcode}\nGenerated via NoBrokerHood`;
+    const shareText = `Pre-approval created!\nType: ${badge}\n${visitorRow ? visitorRow[0]+': '+visitorRow[1]+'\n' : ''}${dateRow ? 'Date: '+dateRow[1]+'\n' : ''}Passcode: ${passcode}\nGenerated via NoBrokerHood Myra`;
     const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-
     return (
       <div className="animate-fade-in" style={{ padding:'8px 0 16px', display:'flex', flexDirection:'column', alignItems:'center', gap:14 }}>
         <div className="animate-scale-in" style={{ marginTop:8 }}>
@@ -565,70 +491,35 @@ export default function MyraSheet({ isClosing, onClose }) {
             <polyline className="draw-check" points="28,52 43,67 72,36" fill="none" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
-
         <div style={{ textAlign:'center' }}>
-          <p style={{ fontSize:16, fontWeight:800, color:'#1a1a2e' }}>Pre-approval created!</p>
-          <p style={{ fontSize:12, color:'#888', marginTop:4 }}>
-            {badge} · {dateRow ? dateRow[1] : 'Today'}
-          </p>
+          <p style={{ fontSize:17, fontWeight:800, color:'#1a1a2e' }}>Pre-approval created!</p>
+          <p style={{ fontSize:12, color:'#888', marginTop:4 }}>{badge} · {dateRow ? dateRow[1] : 'Today'}</p>
         </div>
-
-        <div style={{
-          border:'2px dashed #C8102E', borderRadius:14, padding:'12px 24px',
-          display:'flex', flexDirection:'column', alignItems:'center', gap:6,
-          background:'#fdf0f2',
-        }}>
-          <span style={{ fontSize:11, color:'#C8102E', fontWeight:600 }}>GATE PASSCODE</span>
-          <span style={{ fontSize:32, fontWeight:800, color:'#C8102E', letterSpacing:'0.18em' }}>{passcode}</span>
+        <div style={{ border:'2px dashed #C8102E', borderRadius:14, padding:'12px 28px', display:'flex', flexDirection:'column', alignItems:'center', gap:6, background:'#fdf0f2' }}>
+          <span style={{ fontSize:11, color:'#C8102E', fontWeight:700, letterSpacing:'0.08em' }}>GATE PASSCODE</span>
+          <span style={{ fontSize:34, fontWeight:800, color:'#C8102E', letterSpacing:'0.2em' }}>{passcode}</span>
           <button
             onClick={() => { navigator.clipboard?.writeText(passcode).catch(()=>{}); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-            style={{
-              display:'flex', alignItems:'center', gap:5,
-              background:'white', border:'1px solid #C8102E', borderRadius:8,
-              padding:'5px 12px', fontSize:11, fontWeight:600, color:'#C8102E', cursor:'pointer',
-            }}
+            style={{ display:'flex', alignItems:'center', gap:5, background:'white', border:'1px solid #C8102E', borderRadius:8, padding:'5px 12px', fontSize:11, fontWeight:600, color:'#C8102E', cursor:'pointer' }}
           >
             <Copy size={13} /> {copied ? 'Copied!' : 'Copy'}
           </button>
         </div>
-
-        <div style={{
-          width:'100%', borderRadius:12,
-          background:'linear-gradient(135deg,#0c1445,#1a237e)',
-          padding:'12px 14px', display:'flex', alignItems:'center', gap:10,
-        }}>
-          <div style={{ flex:1 }}>
-            <p style={{ fontSize:9, color:'rgba(255,255,255,0.6)', marginBottom:2 }}>SPONSORED</p>
-            <p style={{ fontSize:12, fontWeight:700, color:'white' }}>zepto pharmacy</p>
-            <p style={{ fontSize:11, color:'rgba(255,255,255,0.8)' }}>flat 20% off on medicines</p>
-          </div>
-          <button style={{
-            background:'#C8102E', color:'white', border:'none',
-            borderRadius:8, padding:'6px 10px', fontSize:10, fontWeight:700, cursor:'pointer',
-          }}>Order Now</button>
+        <div style={{ width:'100%', borderRadius:12, background:'linear-gradient(135deg,#fffbeb,#fef3c7)', padding:'12px 14px', border:'1px solid #fde68a' }}>
+          <p style={{ fontSize:9, color:'#92400e', fontWeight:700, letterSpacing:'0.06em', marginBottom:4 }}>SPONSORED</p>
+          <p style={{ fontSize:13, fontWeight:700, color:'#0f1f3d' }}>💳 NoBroker Pay</p>
+          <p style={{ fontSize:11, color:'#555', marginTop:2, marginBottom:8 }}>Zero fee on maintenance payments</p>
+          <span style={{ fontSize:12, color:'#C8102E', fontWeight:600, cursor:'pointer' }}>Explore →</span>
         </div>
-
-        <button
-          onClick={() => window.open(waUrl, '_blank')}
-          style={{
-            width:'100%', background:'#0f1f3d', color:'white', border:'none',
-            borderRadius:12, padding:'12px', fontSize:13, fontWeight:700, cursor:'pointer',
-            display:'flex', alignItems:'center', justifyContent:'center', gap:8,
-          }}
-        >
+        <button onClick={() => window.open(waUrl, '_blank')} style={{ width:'100%', background:'#0f1f3d', color:'white', border:'none', borderRadius:12, padding:'13px', fontSize:13, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
           <span>💬</span> Share via WhatsApp
         </button>
-        <button
-          onClick={onClose}
-          style={{
-            width:'100%', background:'#f0f0f0', color:'#555', border:'none',
-            borderRadius:12, padding:'12px', fontSize:13, fontWeight:600, cursor:'pointer',
-          }}
-        >Done</button>
+        <button onClick={onClose} style={{ width:'100%', background:'#f0f0f0', color:'#555', border:'none', borderRadius:12, padding:'13px', fontSize:13, fontWeight:600, cursor:'pointer' }}>Done</button>
       </div>
     );
   }
 
+  // ── ChipRow ──
   function ChipRow({ chips, onChip }) {
     return (
       <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginTop:4 }}>
@@ -642,38 +533,28 @@ export default function MyraSheet({ isClosing, onClose }) {
               borderRadius:20, padding:'7px 13px',
               fontSize:12, fontWeight:600,
               color: chip.demo ? '#92400e' : '#1a1a2e',
-              cursor:'pointer',
-              transition:'transform .1s',
+              cursor:'pointer', transition:'transform .12s',
             }}
-            onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.95)'; }}
-            onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-            onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.95)'; }}
-            onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+            onMouseDown={e => { e.currentTarget.style.transform='scale(0.95)'; }}
+            onMouseUp={e => { e.currentTarget.style.transform='scale(1)'; }}
+            onTouchStart={e => { e.currentTarget.style.transform='scale(0.95)'; }}
+            onTouchEnd={e => { e.currentTarget.style.transform='scale(1)'; }}
           >
             {chip.l}
           </button>
         ))}
         {showCustomTime && (
           <div style={{ width:'100%', display:'flex', gap:8, alignItems:'center', marginTop:4 }}>
-            <input
-              type="time"
-              value={customTimeVal}
-              onChange={e => setCustomTimeVal(e.target.value)}
-              style={{ flex:1, border:'1px solid #e0e0e0', borderRadius:8, padding:'7px 10px', fontSize:13 }}
-            />
-            <button
-              onClick={handleConfirmCustomTime}
-              style={{
-                background:'#C8102E', color:'white', border:'none',
-                borderRadius:8, padding:'8px 14px', fontSize:12, fontWeight:700, cursor:'pointer',
-              }}
-            >Set</button>
+            <input type="time" value={customTimeVal} onChange={e => setCustomTimeVal(e.target.value)}
+              style={{ flex:1, border:'1px solid #e0e0e0', borderRadius:8, padding:'7px 10px', fontSize:13 }} />
+            <button onClick={handleConfirmCustomTime} style={{ background:'#C8102E', color:'white', border:'none', borderRadius:8, padding:'8px 14px', fontSize:12, fontWeight:700, cursor:'pointer' }}>Set</button>
           </div>
         )}
       </div>
     );
   }
 
+  // ── Render ──
   return (
     <div
       className={isClosing ? 'animate-sheet-down' : 'animate-sheet-up'}
@@ -685,20 +566,18 @@ export default function MyraSheet({ isClosing, onClose }) {
         boxShadow:'0 -8px 40px rgba(0,0,0,0.2)',
       }}
     >
+      {/* Drag handle */}
       <div style={{ display:'flex', justifyContent:'center', paddingTop:10, paddingBottom:6 }}>
         <div style={{ width:36, height:4, borderRadius:2, background:'#e0e0e0' }} />
       </div>
 
-      <div style={{
-        display:'flex', alignItems:'center', justifyContent:'space-between',
-        padding:'0 16px 12px', borderBottom:'1px solid #f0f0f0',
-      }}>
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 16px 12px', borderBottom:'1px solid #f0f0f0' }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <div style={{
-            width:36, height:36, borderRadius:'50%', background:'#C8102E',
-            display:'flex', alignItems:'center', justifyContent:'center',
-            color:'white', fontWeight:800, fontSize:16,
-          }}>M</div>
+          <div style={{ position:'relative' }}>
+            <div style={{ width:36, height:36, borderRadius:'50%', background:'#C8102E', display:'flex', alignItems:'center', justifyContent:'center', color:'white', fontWeight:800, fontSize:16 }}>M</div>
+            <div style={{ position:'absolute', top:1, right:1, width:9, height:9, borderRadius:'50%', background:'#22c55e', border:'1.5px solid white' }} />
+          </div>
           <div>
             <p style={{ fontSize:14, fontWeight:800, color:'#1a1a2e' }}>Myra</p>
             <p style={{ fontSize:11, color:'#888' }}>Society AI Assistant</p>
@@ -707,7 +586,7 @@ export default function MyraSheet({ isClosing, onClose }) {
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           {voiceState === 'listening' && (
             <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-              <div style={{ width:8, height:8, borderRadius:'50%', background:'#22c55e' }} />
+              <div style={{ width:7, height:7, borderRadius:'50%', background:'#22c55e' }} />
               <span style={{ fontSize:10, color:'#22c55e', fontWeight:600 }}>Listening</span>
             </div>
           )}
@@ -717,10 +596,8 @@ export default function MyraSheet({ isClosing, onClose }) {
         </div>
       </div>
 
-      <div ref={chatRef} style={{
-        flex:1, overflowY:'auto', padding:'12px 16px',
-        display:'flex', flexDirection:'column', gap:10,
-      }}>
+      {/* Chat area */}
+      <div ref={chatRef} style={{ flex:1, overflowY:'auto', padding:'12px 16px', display:'flex', flexDirection:'column', gap:10 }}>
         {messages.map(m => <MessageBubble key={m.id} m={m} />)}
 
         {activeChips && !showCard && !showSuccess && (
@@ -729,19 +606,14 @@ export default function MyraSheet({ isClosing, onClose }) {
 
         {!showCard && !showSuccess && !flowCat && messages.length <= 1 && (
           <div style={{ marginTop:8 }}>
-            <p style={{ fontSize:11, color:'#aaa', marginBottom:8 }}>Try saying:</p>
+            <p style={{ fontSize:11, color:'#aaa', marginBottom:8 }}>Try a demo flow:</p>
             <ChipRow chips={demoChips} onChip={handleChipTap} />
           </div>
         )}
 
         {voiceState === 'listening' && transcript && (
           <div style={{ display:'flex', justifyContent:'flex-end' }}>
-            <div style={{
-              background:'#0f1f3d', color:'white', opacity:0.6,
-              borderRadius:'16px 16px 4px 16px', padding:'9px 13px', fontSize:13,
-            }}>
-              {transcript}
-            </div>
+            <div style={{ background:'#0f1f3d', color:'white', opacity:0.65, borderRadius:'16px 16px 4px 16px', padding:'9px 13px', fontSize:13 }}>{transcript}</div>
           </div>
         )}
 
@@ -753,35 +625,24 @@ export default function MyraSheet({ isClosing, onClose }) {
       {showCard && !showSuccess && <ConfirmCard />}
 
       {!showSuccess && (
-        <div style={{
-          borderTop:'1px solid #f0f0f0', padding:'10px 14px',
-          display:'flex', gap:8, alignItems:'center',
-          background:'white',
-        }}>
-          <input
-            value={textInput}
-            onChange={e => setTextInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleSendText(); }}
-            placeholder="Type a message..."
-            style={{
-              flex:1, border:'1px solid #e0e0e0', borderRadius:20,
-              padding:'9px 14px', fontSize:13, outline:'none',
-              background:'#fafafa',
-            }}
-          />
-          <button
-            onClick={handleSendText}
-            disabled={!textInput.trim()}
-            style={{
-              width:36, height:36, borderRadius:'50%',
-              background: textInput.trim() ? '#C8102E' : '#e0e0e0',
-              border:'none', cursor: textInput.trim() ? 'pointer' : 'default',
-              display:'flex', alignItems:'center', justifyContent:'center',
-              flexShrink:0,
-            }}
-          >
-            <Send size={16} color="white" />
-          </button>
+        <div style={{ borderTop:'1px solid #f0f0f0', padding:'10px 14px 14px', display:'flex', flexDirection:'column', gap:6, background:'white', flexShrink:0 }}>
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            <input
+              value={textInput}
+              onChange={e => setTextInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSendText(); }}
+              placeholder="Or type here and press Enter"
+              style={{ flex:1, border:'1px solid #e0e0e0', borderRadius:20, padding:'9px 14px', fontSize:13, outline:'none', background:'#fafafa' }}
+            />
+            <button
+              onClick={handleSendText}
+              disabled={!textInput.trim()}
+              style={{ width:36, height:36, borderRadius:'50%', background: textInput.trim() ? '#C8102E' : '#e0e0e0', border:'none', cursor: textInput.trim() ? 'pointer' : 'default', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}
+            >
+              <Send size={16} color="white" />
+            </button>
+          </div>
+          <p style={{ fontSize:10, color:'#bbb', textAlign:'center' }}>English · हिन्दी · ಕನ್ನಡ · தமிழ் · తెలుగు · मराठी</p>
         </div>
       )}
     </div>
