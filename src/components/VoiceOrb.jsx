@@ -181,9 +181,8 @@ export default function VoiceOrb({ dispatch }) {
             exit={{ scale: 0, opacity: 0 }}
             whileTap={{ scale: 0.88 }}
             onClick={openOrb}
-            className="fixed bottom-24 z-30 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center"
+            className="absolute bottom-24 right-4 z-30 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center"
             style={{
-              right: 'max(16px, calc(50% - 192px))',
               background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 35%, #ec4899 65%, #f59e0b 100%)',
             }}
           >
@@ -205,10 +204,10 @@ export default function VoiceOrb({ dispatch }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 flex flex-col items-center justify-center px-6"
+            className="absolute inset-0 z-40 flex flex-col items-center justify-center px-6"
             style={{ backdropFilter: 'blur(20px)', background: 'rgba(10,8,25,0.72)' }}
           >
-            <button onClick={closeOrb} className="absolute top-14 right-5 text-white/60 hover:text-white">
+            <button onClick={closeOrb} className="absolute top-4 right-4 text-white/60 hover:text-white">
               <X size={24} />
             </button>
 
