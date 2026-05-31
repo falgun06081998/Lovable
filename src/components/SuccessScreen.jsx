@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle, Share2, X } from 'lucide-react'
+import { geminiSpeak } from '../services/gemini'
 
 const ADS = {
   delivery: {
@@ -40,20 +41,12 @@ const ADS = {
   },
 }
 
-function speak(text) {
-  if (!('speechSynthesis' in window)) return
-  speechSynthesis.cancel()
-  const utt = new SpeechSynthesisUtterance(text)
-  utt.lang = 'en-IN'
-  utt.rate = 1.05
-  speechSynthesis.speak(utt)
-}
 
 export default function SuccessScreen({ success, dispatch }) {
   const ad = ADS[success.type] || ADS.default
 
   useEffect(() => {
-    const timer = setTimeout(() => speak(ad.assistantLine), 600)
+    const timer = setTimeout(() => geminiSpeak(ad.assistantLine), 600)
     return () => clearTimeout(timer)
   }, [])
 

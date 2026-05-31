@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Mic } from 'lucide-react'
 import { buildConversation, resolveClarification } from '../state/commandInterpreter'
+import { geminiSpeak } from '../services/gemini'
 
 const ASSISTANT_NAME = 'Aria'
 
@@ -13,14 +14,7 @@ const HINTS = [
   '"My maid comes every morning"',
 ]
 
-function speak(text) {
-  if (!('speechSynthesis' in window)) return
-  speechSynthesis.cancel()
-  const utt = new SpeechSynthesisUtterance(text)
-  utt.lang = 'en-IN'
-  utt.rate = 1.05
-  speechSynthesis.speak(utt)
-}
+const speak = (text) => geminiSpeak(text)
 
 export default function VoiceOrb({ dispatch }) {
   const [open, setOpen] = useState(false)
@@ -103,26 +97,25 @@ export default function VoiceOrb({ dispatch }) {
     rec.start()
   }
 
-  const processInput = (text) => {
+  const processInput = async (text) => {
     setConvoPhase('thinking')
     setTranscript(text)
 
-    setTimeout(() => {
-      const steps = clarifyContext
-        ? resolveClarification(text, clarifyContext)
-        : buildConversation(text)
+    const steps = await (clarifyContext
+      ? resolveClarification(text, clarifyContext)
+      : buildConversation(text))
 
-      if (!steps || steps.length === 0) {
-        setAssistantText("Sorry, I didn't catch that. Try saying something like \"Pre-approve a Swiggy delivery\".")
-        speak("Sorry, I didn't catch that. Could you try again?")
-        setConvoPhase('intro')
-        return
-      }
+    if (!steps || steps.length === 0) {
+      const msg = "Sorry, I didn't catch that. Try saying something like \"Pre-approve a Swiggy delivery\"."
+      setAssistantText(msg)
+      speak("Sorry, I didn't catch that. Could you try again?")
+      setConvoPhase('intro')
+      return
+    }
 
-      stepQueue.current = [...steps]
-      setClarifyContext(null)
-      runNextStep()
-    }, 900)
+    stepQueue.current = [...steps]
+    setClarifyContext(null)
+    runNextStep()
   }
 
   const runNextStep = () => {
