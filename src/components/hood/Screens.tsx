@@ -34,7 +34,7 @@ export type ScreenSubmitPayload = {
 
 function ScreenShell({
   children,
-  onClose,
+  onClose: _onClose,
 }: {
   children: React.ReactNode;
   onClose: () => void;
