@@ -109,7 +109,8 @@ export default function VoiceOrb({ dispatch }) {
             exit={{ scale: 0, opacity: 0 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setOpen(true)}
-            className="fixed bottom-24 right-4 z-30 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center"
+            className="fixed bottom-24 z-30 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center"
+            style={{ right: 'calc(50% - 176px)' }}
             style={{
               background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 30%, #ec4899 60%, #f59e0b 100%)',
             }}

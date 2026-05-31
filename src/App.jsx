@@ -17,7 +17,7 @@ export default function App() {
   }
 
   return (
-    <div className="w-full max-w-sm mx-auto bg-white min-h-screen relative overflow-hidden shadow-2xl">
+    <div className="w-full max-w-sm mx-auto bg-white min-h-screen relative shadow-2xl">
       <HomeScreen onPreApprove={() => dispatch({ type: 'OPEN_MODAL', payload: 'preapprove' })} />
 
       {/* Backdrop */}
